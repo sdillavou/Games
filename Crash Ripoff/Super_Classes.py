@@ -30,7 +30,7 @@ class Vector:
 class Body(Vector): 
     
     transform = np.copy(identitymat) # transformation matrix, can change orientation, flip, and scale.       
-    shapes = {}             # dictonary of shapes to draw
+    shapes = []                      # dictonary of shapes to draw
     
     # Create & initialize any specified variables  
     def __init__(self,position,size,corporeal=True,solid=True,velocity=[0,0]):     
@@ -59,14 +59,14 @@ class Body(Vector):
     def return_to_upright(self): # returns to original orientation
         self.transform = identitymat*np.linalg.det(self.transform)
         
+        
     def sort_shapes(self):
-        self.shapes = sorted(self.shapes, key=lambda x: x.z, reverse=False)
+        self.shapes = sorted(self.shapes, key= lambda x: x.z, reverse=False)
         
     # Draw Body's shapes, subject to position and transformation of the Body, in the order of their .z parameter
-    def draw(self,canvas):
-        self.sort_shapes()                  # may be unnecessary to call here, too cumbersome?
-        for s in shapes.values():
-            s.draw(canvas,self.position,self.transform)
+    def draw(self,canvas):        
+        for s in self.shapes:
+            s.draw(canvas,self.pos,self.transform)
     
         
 ########################################################################################
@@ -74,7 +74,7 @@ class Body(Vector):
 # Class of objects that can be drawn, with nodes and coloring
 class Shape: 
     
-    def __init__(self,nodes,color = tuple(0,0,0),line_color = None, line_width = 1,visible = True,z = 0):
+    def __init__(self,nodes,color = (0,0,0),line_color = None, line_width = 1,visible = True,z = 0):
         self.nodes = nodes
         self.color = color
         self.line_color = line_color
@@ -85,10 +85,13 @@ class Shape:
     def draw(self,canvas,position,transform=identitymat): # draw if visible, transform if indicated, shift position
         if self.visible:
             draw_nodes = [tuple(np.matmul(transform,n)+position) for n in self.nodes] # position and transform nodes
-            if isinstance(self.color,tuple): # if filled
-                pygame.draw.polygon(canvas, self.color, draw_nodes)
-            if isinstance(self.line_color,tuple): # if outlined
-                pygame.draw.polygon(canvas, self.line_color, draw_nodes, self.line_width)
+            if not self.color is None: # if filled
+                pygame.draw.polygon(canvas, self.color, draw_nodes+draw_nodes[0:1])
+            if not self.line_color is None: # if outlined
+                pygame.draw.polygon(canvas, self.line_color, draw_nodes+draw_nodes[0:1], self.line_width)
+
+    def transform(self,transform): # transform nodes (permanently) with matrix
+        self.nodes = [tuple(np.matmul(transform,n)) for n in self.nodes] 
 
         
 ########################################################################################
