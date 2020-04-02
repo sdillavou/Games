@@ -1,9 +1,12 @@
 import pygame, numpy as np
 
+
+#####  Useful Matrices  ################################################################
+
 rot90mat = np.array([[0,-1],[1,0]])
 identitymat = np.array([[1,0],[0,1]])
 
-########################################################################################
+#####      Classes      ################################################################
 
 # Superclass for any object with location and velocity. 
 class Vector:
@@ -26,17 +29,15 @@ class Vector:
 # Class with size, transformation, visible, corporeal, and solid, and shapes to draw
 class Body(Vector): 
     
-    transform = np.copy(identitymat) # transformation matrix, can change orientation, flip, and scale.
-    corporeal = True        # can this object interact with others
-    solid = True            # this object cannot pass through others
+    transform = np.copy(identitymat) # transformation matrix, can change orientation, flip, and scale.       
     shapes = {}             # dictonary of shapes to draw
     
     # Create & initialize any specified variables  
     def __init__(self,position,size,corporeal=True,solid=True,velocity=[0,0]):     
         super().__init__(position,velocity)
-        self.corporeal = corporeal
-        self.solid = solid
-        self.size = np.array(size)
+        self.corporeal = corporeal             # can this object interact with others
+        self.solid = solid                     # this object cannot pass through others
+        self.size = np.array(size)             # rectangular size of this object (width/2, height/2)
 
     # Modify self.transform to change size, orientation, reflection
     def rot90(self,times = 1): # rotates body 90 degrees counter clockwise
