@@ -30,6 +30,7 @@ class Vector:
 
 # Class of Vectors with 2D size, and transformation. Can be visible, corporeal, and solid, and contains shapes to draw
 class Body(Vector): 
+    destruct_length = 5
                 
     # Create & initialize any specified variables  
     def __init__(self,position,size,corporeal=True,solid=True,velocity=[0,0]):     
@@ -43,6 +44,7 @@ class Body(Vector):
         self.cooldown = 0                     # generic counter to remember past effects
         self.resting_on = None                 # (Single) body this body is is resting on (if any)
         self.on_me = []                        # List of bodies resting on this body (if any) 
+        self.destruct_counter = -1
         
         def transform_inverse(self):
             return numpy.linalg.inv(self.transform) 
@@ -91,9 +93,15 @@ class Body(Vector):
         self.shapes = sorted(self.shapes, key= lambda x: x.z, reverse=False)
         
     # Draw Body's shapes, subject to position of the body (removed: transformation), (in the order of their .z parameter hopefully)
-    def draw(self,canvas,zero=np.array([0,0])):        
-        for s in self.shapes:
-            s.draw(canvas,self.pos-zero,self.transform)
+    def draw(self,canvas,zero=np.array([0,0])):  
+        if self.destruct_counter > 0:
+            self.destruct_counter -=1
+            self.transform *= 0.8
+        
+        if self.destruct_counter !=0:     
+            for s in self.shapes:
+                s.draw(canvas,self.pos-zero,self.transform)
+        # if destruct counter = 0, no go
    
     # Move and rotate this object
     def move(self):
@@ -135,6 +143,12 @@ class Body(Vector):
             self.resting_on = None # remove other object from this one
         
 
+    def destroy(self):
+        self.destruct_counter = self.destruct_length
+        self.corporeal = False
+        self.solid = False
+
+        
 ########################################################################################
    
 # Class of objects that can be drawn, with nodes and coloring
