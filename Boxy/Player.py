@@ -31,15 +31,8 @@ class Player(Body):
         self.size+= 1.0
     
     def gravity(self):
-        # accelerate due to gravity
-        #print(self.vel)
-       # if isinstance(self.resting_on,Body):
-       #     self.vel[1] = 0
-       # else:
         self.vel[1] = min(max_fall_speed,self.vel[1]+G)
-       # print(min(max_fall_speed,self.vel[1]+G))
-       # print("#",self.vel)
-        
+ 
     def jump(self):
         # flies upward, faster if crouching, not if airborne
         if isinstance(self.resting_on,Body):
@@ -47,14 +40,13 @@ class Player(Body):
             self.vel[0] += self.resting_on.vel[0] # add velocity of object being stood on
             self.is_off() # no longer standing on an object
     
-    def crouch(self,keyval): # makes self smaller to crouch, bigger to uncrouch
-        
+    # based on crouch key, adjust size and position to lower player to the ground.
+    def crouch(self,keyval): 
         if self.crouching:
             if not keyval or not isinstance(self.resting_on,Body): # if key released or in the air, uncrouch
                 self.pos[1] -= np.matmul(self.transform,self.size)[1]
                 self.transform[0][:] *= 0.8
                 self.transform[1][:] *= 2.0
-
                 self.crouching = False
         else: # if uncrouched
             if keyval and isinstance(self.resting_on,Body): # down key pressed and on the ground
@@ -63,45 +55,44 @@ class Player(Body):
                 self.pos[1] += np.matmul(self.transform,self.size)[1]
                 self.crouching = True
            
-        
+      
+    # based on walking (L/R) keys, modify velocity if standing on an object
     def walk(self,keyval,keyval2): # keyval = (is right key down) - (is left key down) or (is down key down) - (is up key down)
-        accel = 200
-        decel = 200
         top_speed = 3
-        airborne = not isinstance(self.resting_on,Body)
         
+        airborne = not isinstance(self.resting_on,Body)
+        decelerating = (keyval == 0 or keyval*self.vel[0] <0)
+
         
         if airborne:# less control in the air. duh.
             accel = 0.1
             decel = 0.1
            # top_speed = 5
-            
-        if self.crouching:# can't crawl as fast as you can run... duh.
-            top_speed = 1
-            
-        v = self.vel[0]
-       # v2 = self.vel[2]
         
-        if keyval == 0 or keyval*v <0:
-          #  if keyval*v < 0: # active deceleration
-          #      decel *=1.5
-            if airborne:
-                if abs(v)>0: # prevent decel into turning around
-                   # print(self.vel)
-                    self.vel[0] = v-math.copysign(min(accel,abs(v)),v)
-                   # print('after:',self.vel)
-            else: # if on ground, stop immediately
-                self.vel[0] = 0
-        else:
-            if airborne:
-                self.vel[0] = v+keyval*accel
-            else:
-                self.vel[0] = min(max(-top_speed,v+keyval*accel),top_speed) # prevent exceeding top speed
+            if decelerating:
+                self.vel[0] -= math.copysign(min(decel,abs(self.vel[0])),self.vel[0]) # decelerate but not past 0
+            else: # accelerating
+                self.vel[0] += keyval*accel
+            
+        else: # if on the ground, stop and start immediately
+            
+            if decelerating:
+                self.vel[0] = 0 # stop immediately
+            else: # accelerating
+                if self.crouching: # can't crawl as fast as you can run... duh.
+                    top_speed = 1
+
+                self.vel[0] =  top_speed*keyval # start walking/crawling at  speed
+            
+       
+    
     
        # print('walking',self.vel)
 
             #### FOR THIRD DIMENSION ####
-      #  if keyval2 == 0 or keyval2*v2 <0:
+            # v2 = self.vel[2]
+
+     #  if keyval2 == 0 or keyval2*v2 <0:
           #  if keyval2*v2 < 0: # active deceleration
           #      decel *=1.5
        #     if airborne:
