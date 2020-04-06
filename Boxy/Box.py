@@ -1,12 +1,13 @@
 import pygame, copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
+from Constants import box_size
 
 ##### Useful Identities ################################################################
 
 #rot90mat = np.array([[0,-1],[1,0]],dtype='float')
 identitymat = np.array([[1,0],[0,1]],dtype='float')
-box_size = 30
+
 
 metal_color = (159,161,163)
 wood_color = (200,100,0)
