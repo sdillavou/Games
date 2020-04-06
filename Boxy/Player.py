@@ -10,6 +10,7 @@ from Constants import G, box_size, S
 dim = 2
 max_fall_speed = 12.0*S
 jump_strength = 15.0*S
+bounce_strength = 10*S
 crouch_bonus = 0.2 
 crawling_speed = 1.5*S
 running_speed = 4.5*S
@@ -20,7 +21,7 @@ slide_speed = 7.5*S
 crouch_fraction = 0.5
 character_color = (255,0,255)
 sliding_color = (200,0,200)
-attack_fraction = 1.2
+attack_fraction = np.array([1.2,1.1],dtype='float')
 slide_fraction = 1.2
 
 #z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
@@ -35,15 +36,15 @@ player_size = np.array([box_size*.75,box_size*1.25]) # box size already contains
 class Player(Body):
 # Class for main character   
     def __init__(self,position):
-        super().__init__(position,player_size-1,corporeal=True,solid=True,velocity=[0,0])  
+        super().__init__(position,player_size,corporeal=True,solid=True,velocity=[0,0])  
         self.crouching = False
         self.sliding = 0
         self.attacking = 0
         self.shapes.append(Shape(self.self_shape(),(255,0,255),line_color = None,line_width = None)) # add visible shape for box
-        self.size+= 1.0
+       
         
         # hitbox for attack
-        self.attack_box = Body([0,0],player_size*np.array([attack_fraction,1.0],dtype='float'),solid=False)
+        self.attack_box = Body([0,0],player_size*attack_fraction,solid=False)
         self.attack_box.shapes.append(Shape(self.attack_box.self_shape(),color = (255,0,0),line_color = None)) # add outline
         # hitbox for slide
         self.slide_box = Body([0,0],player_size*np.array([slide_fraction,crouch_fraction],dtype='float'),solid=False)
@@ -92,13 +93,9 @@ class Player(Body):
 
         
         if not airborne and jump_key and self.attacking<=0: #jump if on the ground and not attacking (can jump out of slide)
-            self.vel[1] = (-jump_strength*(1+ crouch_bonus*(self.crouching>0)))
-            self.is_off() # no longer standing on an object
-            self.sliding = 0 # cancels slides 
+            self.jump()
             airborne = True
-            if abs(self.vel[0])>running_speed: # cannot maintain sliding speed in air
-                self.vel[0] = math.copysign(running_speed,self.vel[0])
-            
+
          
         if self.sliding>0: # sliding continues regardless of keys           
             self.sliding-=1  
@@ -123,11 +120,7 @@ class Player(Body):
             else: # if uncrouched
                 if not (self.attacking>0) and crouch_key and not airborne: # down key pressed and on the ground and not attacking
 
-                    # crouch/slide position
-                   # self.transform[0][:] *= 1.25
-                    self.transform[1][:] *= crouch_fraction
-                    self.pos[1] += np.matmul(self.transform,self.size)[1]
-                    self.crouching = True
+                    self.crouch()
                     
                     if run_key: # if already running, slide!
                         self.sliding = slide_duration # 10 frames of sliding!
@@ -151,6 +144,26 @@ class Player(Body):
 
                     self.vel[0] =  top_speed*run_key # start walking/crawling at  speed
         
-            
+    # separate function so that it can be externally mandated        
+    def crouch(self):
+        self.transform[1][:] *= crouch_fraction
+        self.pos[1] += np.matmul(self.transform,self.size)[1]
+        self.crouching = True
         
-   
+    def jump(self):
+        self.vel[1] = (-jump_strength*(1+ crouch_bonus*(self.crouching>0)))
+        self.is_off() # no longer standing on an object
+        self.sliding = 0 # cancels slides 
+      #  if abs(self.vel[0])>running_speed: # cannot maintain sliding speed in air
+      #      self.vel[0] = math.copysign(running_speed,self.vel[0])
+  
+    def bounce(self,jump_timer):
+        if jump_timer>0:
+            self.vel[1] = -jump_strength  ## ADD CROUCH STRENGTH WHEN JUMPING ON SPRING BLOCK. DO JUST REGULAR JUMP WHEN BOUNCING ON SPRING BLOCK
+        else:
+            self.vel[1] = -bounce_strength
+            
+        self.is_off() # no longer standing on an object
+        self.sliding = 0 # cancels slides 
+        airborne = True
+       

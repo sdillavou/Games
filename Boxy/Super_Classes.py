@@ -132,8 +132,8 @@ class Body(Vector):
     
     # Define this object as 'on' other
     def is_on(self,other):
-        if not self.resting_on == other: # do at add if already added... this causes problemos.
-            self.resting_on = other     # self is on other
+        self.resting_on = other     # self is on other
+        if not self in other.on_me: # don't add if already added... this causes problemos.
             other.on_me.append(self)    # other has self resting on it
         
     # Define this object as not 'on' any object
