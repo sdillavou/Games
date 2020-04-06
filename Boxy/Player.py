@@ -11,6 +11,8 @@ dim = 2
 max_fall_speed = 14.0
 jump_strength = 14.0
 crouch_bonus = 0.2 
+crawling_speed = 1.5
+running_speed = 4.5
 #z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
 
 player_size = np.array([20,40])
@@ -74,9 +76,9 @@ class Player(Body):
                 self.vel[0] = 0 # stop immediately
             else: # accelerating
                 if self.crouching: # can't crawl as fast as you can run... duh.
-                    top_speed = 1
+                    top_speed = crawling_speed
                 else: # running
-                    top_speed = 3 
+                    top_speed = running_speed
 
                 self.vel[0] =  top_speed*keyval # start walking/crawling at  speed
             
