@@ -4,8 +4,8 @@ from Super_Classes import Body, Shape
 
 ##### Useful Identities ################################################################
 
-#rot90mat = np.array([[0,-1],[1,0]])
-identitymat = np.array([[1,0],[0,1]])
+#rot90mat = np.array([[0,-1],[1,0]],dtype='float')
+identitymat = np.array([[1,0],[0,1]],dtype='float')
 box_size = 30
 
 metal_color = (159,161,163)
@@ -102,7 +102,7 @@ class Nitro(Box):
             jump = (randint(0,100) < 1)
         
             if jump:
-                self.temporary_shift = np.array([randint(-50,50),randint(-50,-20)])/20
+                self.temporary_shift = np.array([randint(-50,50),randint(-50,-20)],dtype='float')/20
                 self.visual_shift([self.temporary_shift[0],0])
                 self.visual_recursive_shift([0,self.temporary_shift[1]])
                 self.cooldown -=1

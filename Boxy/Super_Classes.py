@@ -3,8 +3,8 @@ import pygame, numpy as np
 
 #####  Useful Matrices  ################################################################
 
-rot90mat = np.array([[0,-1],[1,0]])
-identitymat = np.array([[1,0],[0,1]])
+rot90mat = np.array([[0,-1],[1,0]],dtype=float)
+identitymat = np.array([[1,0],[0,1]],dtype=float)
 
 #####      Classes      ################################################################
 
@@ -13,12 +13,14 @@ class Vector:
     
     # Create & initialize position (and vel)      
     def __init__(self,position=[0,0],velocity=[0,0]): 
-        self.pos = np.array(position)
-        self.vel = np.array(velocity)
+        self.pos = np.array(position,dtype=float)
+        self.vel = np.array(velocity,dtype=float)
+      #  print(self.vel)
+      #  print(type(self.vel[1]))
     
     # Move this object
     def move(self):
-        self.pos = np.round(self.pos + self.vel) # add vel to pos
+        self.pos = self.pos + self.vel # add vel to pos
     
     # print info (for debugging)
     def info(self):
@@ -34,7 +36,7 @@ class Body(Vector):
         super().__init__(position,velocity)
         self.corporeal = corporeal             # can this object interact with others
         self.solid = solid                     # this object cannot pass through others
-        self.size = np.array(size)             # rectangular size of this object (width/2, height/2)
+        self.size = np.array(size,dtype=float)             # rectangular size of this object (width/2, height/2)
         
         self.transform = np.copy(identitymat)  # transformation matrix, can change orientation, flip, and scale.       
         self.shapes = []                       # dictonary of shapes to draw
@@ -42,35 +44,53 @@ class Body(Vector):
         self.resting_on = None                 # (Single) body this body is is resting on (if any)
         self.on_me = []                        # List of bodies resting on this body (if any) 
         
+        def transform_inverse(self):
+            return numpy.linalg.inv(self.transform) 
+        
     # Modify self.transform to change size, orientation, reflection
-    def rot90(self,times = 1): # rotates body 90 degrees counter clockwise
-        self.transform = np.matmul(np.linalg.matrix_power(rot90mat,times),self.transform)
-    def flipud(self): # flips body up and down (from its current state)
-        self.transform[1,:] *= -1
-    def fliplr(self): # flips body left and right (from its current state)
-        self.transform[0,:] *= -1
-    def scale(self,multiple): # scales body by multiple (or x and y if multiple is length 2)
-        if len(multiple) == 1:
-            self.transform *= multiple
-        elif len(multiple) == 2:
-            for i in range(2):
-                self.transform[i,:] *= multiple[i]
-        else:
-            raise NameError('multiple is incorrect length')
-    def return_to_size(self): # returns to original scale
-        self.transform /= np.linalg.det(self.transform)
-    def return_to_upright(self): # returns to original orientation
-        self.transform = identitymat*np.linalg.det(self.transform)
+ #   def rot90(self,times = 1): # rotates body 90 degrees counter clockwise
+ #       self.transform = np.matmul(np.linalg.matrix_power(rot90mat,times),self.transform)
+ #   def flipud(self): # flips body up and down (from its current state)
+ #       self.transform[1,:] *= -1
+ #   def fliplr(self): # flips body left and right (from its current state)
+ #       self.transform[0,:] *= -1
+ #   def scale(self,multiple): # scales body by multiple (or x and y if multiple is length 2)
+ #       if len(multiple) == 1:
+ #           self.transform *= multiple
+ #       elif len(multiple) == 2:
+ #           for i in range(2):
+ #               self.transform[i,:] *= multiple[i]
+ #       else:
+ #           raise NameError('multiple is incorrect length')
+ #   def return_to_size(self): # returns to original scale
+ #       self.transform /= np.linalg.det(self.transform)
+ #   def return_to_upright(self): # returns to original orientation
+ #       self.transform = identitymat*np.linalg.det(self.transform)
         
     # do two bodies overlap
-    def overlaps(self,other):
-        return all(abs(self.pos-other.pos) <= (self.size + other.size))
+    def overlap(self,other): # could remove transform ability to speed computation?
+        return all(abs(self.pos-other.pos) <= (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size)))
+       
+    # returns dimension and overlap size of shallowest overlap (-1,None if no overlap)
+    def overlap_dim(self,other): # could remove transform ability to speed computation?
+        
+        overlap_sizes = (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size)) - abs(self.pos-other.pos)
+        
+        
+        if all(overlap_sizes>-0.0001): # if all dimensions overlap (account for float error)
+           # print(np.matmul(self.transform,self.size), np.matmul(other.transform,other.size),self.pos, other.pos)
+
+           # print(overlap_sizes)
+            return np.argmin(overlap_sizes) , np.min(overlap_sizes)
+        else:
+            return -1,overlap_sizes
+        
         
     # sort the shapes by their z stack
     def sort_shapes(self):
         self.shapes = sorted(self.shapes, key= lambda x: x.z, reverse=False)
         
-    # Draw Body's shapes, subject to position and transformation of the Body, in the order of their .z parameter
+    # Draw Body's shapes, subject to position of the body (removed: transformation), (in the order of their .z parameter hopefully)
     def draw(self,canvas,zero=np.array([0,0])):        
         for s in self.shapes:
             s.draw(canvas,self.pos-zero,self.transform)
@@ -83,6 +103,7 @@ class Body(Vector):
     def recursive_shift(self,vel):
         self.pos += vel
         for obj in self.on_me: # move objects sitting on this object with it
+            #print(obj)
             obj.recursive_shift(vel)
        
     # shifts all SHAPES that are in this object
@@ -103,8 +124,9 @@ class Body(Vector):
     
     # Define this object as 'on' other
     def is_on(self,other):
-        self.resting_on = other     # self is on other
-        other.on_me.append(self)    # other has self resting on it
+        if not self.resting_on == other: # do at add if already added... this causes problemos.
+            self.resting_on = other     # self is on other
+            other.on_me.append(self)    # other has self resting on it
         
     # Define this object as not 'on' any object
     def is_off(self):
@@ -159,12 +181,14 @@ class Looper(Body):
         self.path_length = len(path)
         self.path.append(path[0]) # add initial spot to the end to make derivative easy
         self.path_counter = 0
+        self.last_vel = np.array([0,0],dtype='float')
         
     # move this body (along path) and adjust velocity for next step
     def move(self):
-        self.vel = np.subtract(self.path[self.path_counter+1],self.path[self.path_counter]) # define new velocity
         super().move() # move like normal body
+        self.last_vel = np.array(self.vel) # need to update velocity to be of FUTURE step, for collision solving.
         self.path_counter = (self.path_counter+1)%self.path_length # iterate counter
+        self.vel = np.subtract(self.path[self.path_counter+1],self.path[self.path_counter]) # define new velocity
                 
         
     

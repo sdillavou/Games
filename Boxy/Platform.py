@@ -3,8 +3,8 @@ from Super_Classes import Body, Shape, Looper
 
 ##### Useful Identities ################################################################
 
-#rot90mat = np.array([[0,-1],[1,0]])
-identitymat = np.array([[1,0],[0,1]])
+#rot90mat = np.array([[0,-1],[1,0]],dtype='float')
+identitymat = np.array([[1,0],[0,1]],dtype='float')
 
 metal_color = (159,161,163)
 wood_color = (200,100,0)
