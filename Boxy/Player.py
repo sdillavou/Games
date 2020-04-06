@@ -58,51 +58,27 @@ class Player(Body):
       
     # based on walking (L/R) keys, modify velocity if standing on an object
     def walk(self,keyval,keyval2): # keyval = (is right key down) - (is left key down) or (is down key down) - (is up key down)
-        top_speed = 3
-        
         airborne = not isinstance(self.resting_on,Body)
         decelerating = (keyval == 0 or keyval*self.vel[0] <0)
 
-        
         if airborne:# less control in the air. duh.
-            accel = 0.1
-            decel = 0.1
-           # top_speed = 5
+            accel,decel = 0.1,0.1
         
             if decelerating:
                 self.vel[0] -= math.copysign(min(decel,abs(self.vel[0])),self.vel[0]) # decelerate but not past 0
             else: # accelerating
                 self.vel[0] += keyval*accel
             
-        else: # if on the ground, stop and start immediately
-            
+        else: # if on the ground, stop and start immediately     
             if decelerating:
                 self.vel[0] = 0 # stop immediately
             else: # accelerating
                 if self.crouching: # can't crawl as fast as you can run... duh.
                     top_speed = 1
+                else: # running
+                    top_speed = 3 
 
                 self.vel[0] =  top_speed*keyval # start walking/crawling at  speed
             
        
-    
-    
-       # print('walking',self.vel)
-
-            #### FOR THIRD DIMENSION ####
-            # v2 = self.vel[2]
-
-     #  if keyval2 == 0 or keyval2*v2 <0:
-          #  if keyval2*v2 < 0: # active deceleration
-          #      decel *=1.5
-       #     if airborne:
-        #        if abs(v2)>0: # prevent decel into turning around
-         #           self.vel[2] = v2-math.copysign(min(accel*self.S,abs(v2)),v2)
-          #  else: # if on ground, stop immediately
-           #     self.vel[2] = 0
-       # else:
-       #     self.vel[2] = min(max(-top_speed*self.S,v+keyval2*decel*self.S),top_speed*self.S) # prevent exceeding top speed
-
-   
-   
    
