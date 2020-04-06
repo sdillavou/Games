@@ -142,7 +142,6 @@ class Body(Vector):
             self.vel += self.resting_on.vel
             (self.resting_on).on_me.remove(self) # remove this object from other's list of objects resting on it
             self.resting_on = None # remove other object from this one
-    
 
     def destroy(self):
         self.destruct_counter = self.destruct_length
