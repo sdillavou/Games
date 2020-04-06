@@ -27,10 +27,13 @@ class Player(Body):
     def __init__(self,position):
         super().__init__(position,player_size-1,corporeal=True,solid=True,velocity=[0,0])  
         self.crouching = False
-        self.sliding = False
-        self.attacking = False
+        self.sliding = 0
+        self.attacking = 0
         self.shapes.append(Shape(self.self_shape(),(255,0,255),line_color = None,line_width = None)) # add visible shape for box
         self.size+= 1.0
+    
+    
+    
     
     def gravity(self):
         self.vel[1] = min(max_fall_speed,self.vel[1]+G)
@@ -39,23 +42,28 @@ class Player(Body):
         # flies upward, faster if crouching, not if airborne
         if isinstance(self.resting_on,Body):
             self.vel[1] = (-jump_strength*(1+ crouch_bonus*(self.crouching>0)))
-            self.vel[0] += self.resting_on.vel[0] # add velocity of object being stood on
+           # self.vel[0] += self.resting_on.vel[0] # add velocity of object being stood on
             self.is_off() # no longer standing on an object
     
     # based on crouch key, adjust size and position to lower player to the ground.
-    def crouch(self,keyval): 
-        if self.crouching:
-            if not keyval or not isinstance(self.resting_on,Body): # if key released or in the air, uncrouch
-                self.pos[1] -= np.matmul(self.transform,self.size)[1]
-                self.transform[0][:] *= 0.8
-                self.transform[1][:] *= 2.0
-                self.crouching = False
-        else: # if uncrouched
-            if keyval and isinstance(self.resting_on,Body): # down key pressed and on the ground
-                self.transform[0][:] *= 1.25
-                self.transform[1][:] *= 0.5
-                self.pos[1] += np.matmul(self.transform,self.size)[1]
-                self.crouching = True
+    def crouch(self,crouch_keyval,run_keyval=0): 
+        if self.sliding == 0: # if not sliding. this button doesn't do anything if sliding
+            if self.crouching:
+                if not crouch_keyval or not isinstance(self.resting_on,Body): # if key released or in the air, uncrouch
+                    self.pos[1] -= np.matmul(self.transform,self.size)[1]
+                    self.transform[0][:] *= 0.8
+                    self.transform[1][:] *= 2.0
+                    self.crouching = False
+            else: # if uncrouched
+                if crouch_keyval and isinstance(self.resting_on,Body): # down key pressed and on the ground
+                    if run_keyval: # if already running
+                        self.sliding = 10 # 10 frames of sliding!
+                        
+                    else: # if not running, just crouch
+                        self.transform[0][:] *= 1.25
+                        self.transform[1][:] *= 0.5
+                        self.pos[1] += np.matmul(self.transform,self.size)[1]
+                        self.crouching = True
            
       
     # based on walking (L/R) keys, modify velocity if standing on an object
