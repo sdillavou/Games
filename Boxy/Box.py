@@ -18,6 +18,8 @@ tnt_letter_color = (230,200,50)
 tnt_light_color = (255,100,100)
 nitro_letter_color = (230,255,230)
 
+explode_scale = 1.4
+
 
 ##### Useful Functions  ################################################################
 
@@ -38,6 +40,9 @@ def n_shape(s=1,shift=[0,0],transform = identitymat,color=(0,0,0),line_color=Non
     n_shp.shift(shift)
     return n_shp
 
+def rect(size,shift=[0,0]):
+        return [(-size[0]+shift[0],-size[1]+shift[1]),(-size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],-size[1]+shift[1])]
+
 
 ##### Classes           ################################################################
 
@@ -52,14 +57,7 @@ class Box(Body):
         super().__init__(position,self.size,True,True,[0,0]) 
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
         self.destruct_counter = -1
-        
-        
-    ##### THIS SHOULD BE MADE A METHOD FOR ALL BODIES
-    def destruct(self):
-        if destruct_counter == -1:
-            destruct_counter = self.destruct_time
-            self.corporeal = False
-            self.solid = False
+       
         
 # Class for metal boxes
 class Metal(Box):
@@ -85,6 +83,19 @@ class Wood(Box):
         for _ in range(4):
             tri.rot90()
             self.shapes.append(copy.deepcopy(tri))
+            
+        self.bounces = 1 # regular wooden boxes can take exactly one bounce
+
+class Metal_Wood(Box):
+    # Initialize wood box
+    def __init__(self,position):
+        super().__init__(position,metal_color)
+        shp = [(-self.size[0]*0.65,-self.size[0]*0.8),(self.size[0]*0.65,-self.size[0]*0.8),(0,-self.size[0]*0.15)]
+        tri = Shape(shp,color = wood_color,line_color = dark_wood_color,line_width = 2)
+        for _ in range(4):
+            tri.rot90()
+            self.shapes.append(copy.deepcopy(tri))
+            
     
 # Class for nitro boxes
 class Nitro(Box):
@@ -114,7 +125,9 @@ class Nitro(Box):
             self.visual_recursive_shift([0,-self.temporary_shift[1]])
             self.temporary_shift = [0,0]
         
-        super().draw(canvas,zero)
+        super().draw(canvas,zero,scale = explode_scale)
+        
+        
 # Class for tnt boxes
 class Tnt(Box):
     destruct_time = 50
@@ -134,7 +147,20 @@ class Tnt(Box):
         light_up = (randint(0,120) < 1) and self.cooldown == 0
         if light_up:
             self.shapes[0].color = tnt_light_color
-        super().draw(canvas,zero)
+        super().draw(canvas,zero,scale=explode_scale)
         if light_up:
             self.shapes[0].color = tnt_color
             self.cooldown = 60
+            
+            
+# Class for wooden boxes
+class Bouncey_Wood(Wood):
+    # Initialize bouncy wood box
+    def __init__(self,position):
+        super().__init__(position)   
+        self.shapes = self.shapes[0:1]
+        for k in range(-2,3):
+            self.shapes.append(Shape(rect([self.size[0]*0.1,self.size[1]*0.8],[self.size[0]*k/3,0]),color = dark_wood_color,line_color = dark_wood_color,line_width = 2))
+            
+        self.bounces = 7 # regular wooden boxes can take exactly one bounce
+    

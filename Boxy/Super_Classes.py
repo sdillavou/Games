@@ -30,7 +30,7 @@ class Vector:
 
 # Class of Vectors with 2D size, and transformation. Can be visible, corporeal, and solid, and contains shapes to draw
 class Body(Vector): 
-    destruct_length = 5
+    destruct_length = 10
                 
     # Create & initialize any specified variables  
     def __init__(self,position,size,corporeal=True,solid=True,velocity=[0,0]):     
@@ -93,10 +93,10 @@ class Body(Vector):
         self.shapes = sorted(self.shapes, key= lambda x: x.z, reverse=False)
         
     # Draw Body's shapes, subject to position of the body (removed: transformation), (in the order of their .z parameter hopefully)
-    def draw(self,canvas,zero=np.array([0,0])):  
+    def draw(self,canvas,zero=np.array([0,0]),scale = 0.8):  
         if self.destruct_counter > 0:
             self.destruct_counter -=1
-            self.transform *= 0.8
+            self.transform *= scale
         
         if self.destruct_counter !=0:     
             for s in self.shapes:

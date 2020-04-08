@@ -4,17 +4,19 @@ from Super_Classes import Body, Shape
 import Box
 import math
 from Constants import G, box_size, S
+from Make_Sounds import slide_sound
 
 ##### Useful Identities ################################################################
 
 dim = 2
 max_fall_speed = 12.0*S
-jump_strength = 15.0*S
-bounce_strength = 10*S
+jump_strength = 15.0*G/0.8
+bounce_strength = 10*G/0.8
 crouch_bonus = 0.2 
 crawling_speed = 1.5*S
 running_speed = 4.5*S
-accel,decel = 0.15*S,.15*S
+accel,decel = 0.15*S,.3*S
+walk_accel = running_speed/3.0
 slide_duration = 10
 attack_duration = 15
 slide_speed = 7.5*S
@@ -23,6 +25,7 @@ character_color = (255,0,255)
 sliding_color = (200,0,200)
 attack_fraction = np.array([1.2,1.1],dtype='float')
 slide_fraction = 1.2
+crouch_release_vel = -0.0001
 
 #z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
 
@@ -117,6 +120,11 @@ class Player(Body):
                    # self.transform[0][:] *= 0.8
                     self.transform[1][:] *= (1/crouch_fraction)
                     self.crouching = False
+                    
+                    if not airborne:
+                        if self.vel[1]>=0:
+                            self.vel[1] = crouch_release_vel # this creates a convergence scenario for breakable boxes
+                        
             else: # if uncrouched
                 if not (self.attacking>0) and crouch_key and not airborne: # down key pressed and on the ground and not attacking
 
@@ -124,16 +132,17 @@ class Player(Body):
                     
                     if run_key: # if already running, slide!
                         self.sliding = slide_duration # 10 frames of sliding!
+                        slide_sound() # play that sound!
                         self.vel[0] = slide_speed*run_key
                         return # no walking/running if sliding
                     
-            if airborne or (self.attacking>0): # if airborne or attacking, control is weak, cannot crouch or slide
+            if airborne: # if airborne control is weak, cannot crouch or slide
                 if decelerating:
                     self.vel[0] -= math.copysign(min(decel,abs(self.vel[0])),self.vel[0]) # decelerate but not past 0
                 else: # accelerating
                     self.vel[0] += run_key*accel
 
-            else: # else, on ground and not attacking, control is strong
+            else: # else, on ground, control is strong
                 if decelerating:
                     self.vel[0] = 0 # stop immediately
                 else: # accelerating
@@ -141,8 +150,10 @@ class Player(Body):
                         top_speed = crawling_speed
                     else: # running
                         top_speed = running_speed
+                        
+                    self.vel[0] = min(max(run_key*walk_accel+self.vel[0],-top_speed),top_speed) # accelerate not above top speed
 
-                    self.vel[0] =  top_speed*run_key # start walking/crawling at  speed
+        
         
     # separate function so that it can be externally mandated        
     def crouch(self):
@@ -157,13 +168,14 @@ class Player(Body):
       #  if abs(self.vel[0])>running_speed: # cannot maintain sliding speed in air
       #      self.vel[0] = math.copysign(running_speed,self.vel[0])
   
-    def bounce(self,jump_timer):
-        if jump_timer>0:
-            self.vel[1] = -jump_strength  ## ADD CROUCH STRENGTH WHEN JUMPING ON SPRING BLOCK. DO JUST REGULAR JUMP WHEN BOUNCING ON SPRING BLOCK
-        else:
-            self.vel[1] = -bounce_strength
-            
-        self.is_off() # no longer standing on an object
-        self.sliding = 0 # cancels slides 
-        airborne = True
+    def bounce(self,jump_timer,side):
+        if self.vel[1] != crouch_release_vel: # if not just released from a crouch (this does not bounce)
+            if jump_timer>0 and side == -1:
+                self.vel[1] = side*jump_strength  ## ADD CROUCH STRENGTH WHEN JUMPING ON SPRING BLOCK. DO JUST REGULAR JUMP WHEN BOUNCING ON SPRING BLOCK
+            else:
+                self.vel[1] = side*bounce_strength
+
+            self.is_off() # no longer standing on an object
+            self.sliding = 0 # cancels slides 
+            airborne = True
        
