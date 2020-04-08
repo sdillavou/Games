@@ -19,6 +19,7 @@ tnt_light_color = (255,100,100)
 nitro_letter_color = (230,255,230)
 
 explode_scale = 1.4
+break_scale = 1.3
 
 
 ##### Useful Functions  ################################################################
@@ -75,6 +76,9 @@ class Metal(Box):
 
 # Class for wooden boxes
 class Wood(Box):
+    
+    destruct_length = 5
+    
     # Initialize wood box
     def __init__(self,position):
         super().__init__(position,wood_color)
@@ -85,6 +89,13 @@ class Wood(Box):
             self.shapes.append(copy.deepcopy(tri))
             
         self.bounces = 1 # regular wooden boxes can take exactly one bounce
+    
+
+    def draw(self,canvas,zero = np.array([0,0])):
+        if self.destruct_counter == self.destruct_length: # remove box
+            self.shapes[0].color = None
+            self.shapes[0].line_color = None
+        super().draw(canvas,zero,scale=break_scale)
 
 class Metal_Wood(Box):
     # Initialize wood box
@@ -160,7 +171,7 @@ class Bouncey_Wood(Wood):
         super().__init__(position)   
         self.shapes = self.shapes[0:1]
         for k in range(-2,3):
-            self.shapes.append(Shape(rect([self.size[0]*0.1,self.size[1]*0.8],[self.size[0]*k/3,0]),color = dark_wood_color,line_color = dark_wood_color,line_width = 2))
+            self.shapes.append(Shape(rect([self.size[0]*0.08,self.size[1]*0.8],[self.size[0]*k/3,0]),color = dark_wood_color,line_color = dark_wood_color,line_width = 2))
             
         self.bounces = 7 # regular wooden boxes can take exactly one bounce
     
