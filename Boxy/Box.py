@@ -186,5 +186,5 @@ class Bouncey_Wood(Wood):
         for k in range(-2,3):
             self.shapes.append(Shape(rect([self.size[0]*0.08,self.size[1]*0.8],[self.size[0]*k/3,0]),color = dark_wood_color,line_color = dark_wood_color,line_width = 2))
             
-        self.bounces = 7 # regular wooden boxes can take exactly one bounce
+        self.bounces = 10 # regular wooden boxes can take exactly one bounce, these do 10
     
