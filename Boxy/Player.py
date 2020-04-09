@@ -13,7 +13,15 @@ jump_strength = 8.0*G**2/S/0.8**2
 crouch_bonus = 0.25
 bounce_strength = jump_strength*(1.0+crouch_bonus)
 
+
+
+slide_duration = 10
+slide_speed = 7.5*S
+sliding_color = (200,0,200)
+slide_fraction = 1.1
+
 max_fall_speed = jump_strength*(1.0+crouch_bonus) 
+max_fly_speed = slide_speed
 jump_key_relevance = 8 # for increasing jumps
 jump_anticipation = 5 # for jump-bounces
 
@@ -21,11 +29,6 @@ crawling_speed = 1.5*S
 running_speed = 4.5*S
 accel,decel = 0.15*S,.3*S
 walk_accel = running_speed/3.0
-
-slide_duration = 10
-slide_speed = 7.5*S
-sliding_color = (200,0,200)
-slide_fraction = 1.1
 
 attack_duration = 10
 attack_fraction = np.array([1.2,0.9],dtype='float')
@@ -128,12 +131,12 @@ class Player(Body):
          
         if self.sliding>0: # sliding continues regardless of keys           
             self.sliding-=1  
-            
+           
         else: # if not sliding, some control  
             
             # deal with attacking
             
-            if attack_key and not (self.attacking>0):
+            if attack_key and not (self.attacking>0) and (self.flopping == 0):
                 self.attacking = attack_duration
                 
             elif self.attacking>0:
@@ -178,7 +181,7 @@ class Player(Body):
                 if decelerating:
                     self.vel[0] -= math.copysign(min(decel,abs(self.vel[0])),self.vel[0]) # decelerate but not past 0
                 else: # accelerating
-                    self.vel[0] += run_key*accel
+                    self.vel[0] = max(-max_fly_speed,min(max_fly_speed,self.vel[0]+run_key*accel))
 
             else: # else, on ground, control is strong
                 if decelerating:
