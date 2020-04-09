@@ -111,7 +111,6 @@ class Body(Vector):
     def recursive_shift(self,vel):
         self.pos += vel
         for obj in self.on_me: # move objects sitting on this object with it
-            #print(obj)
             obj.recursive_shift(vel)
        
     # shifts all SHAPES that are in this object

@@ -60,9 +60,10 @@ class Box(Body):
         super().__init__(position,self.size,True,True,[0,0]) 
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
         self.destruct_counter = -1
+        self.floating = False
         
     def move(self):
-        if not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
+        if not self.floating and not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
             self.vel[1] += G
         super().move()
             

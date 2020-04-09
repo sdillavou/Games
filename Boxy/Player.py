@@ -27,7 +27,7 @@ slide_speed = 7.5*S
 sliding_color = (200,0,200)
 slide_fraction = 1.1
 
-attack_duration = 15
+attack_duration = 10
 attack_fraction = np.array([1.2,0.9],dtype='float')
 
 crouch_fraction = 0.7
