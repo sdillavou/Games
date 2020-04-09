@@ -25,7 +25,7 @@ walk_accel = running_speed/3.0
 slide_duration = 10
 slide_speed = 7.5*S
 sliding_color = (200,0,200)
-slide_fraction = 1.2
+slide_fraction = 1.1
 
 attack_duration = 15
 attack_fraction = np.array([1.2,0.9],dtype='float')
@@ -64,7 +64,7 @@ class Player(Body):
         self.attack_box = Body([0,0],player_size*attack_fraction,solid=False)
         self.attack_box.shapes.append(Shape(self.attack_box.self_shape(),color = (255,0,0),line_color = None)) # add outline
         # hitbox for slide
-        self.slide_box = Body([0,0],player_size*np.array([slide_fraction,crouch_fraction],dtype='float'),solid=False)
+        self.slide_box = Body([0,0],player_size*np.array([slide_fraction,crouch_fraction*0.9],dtype='float'),solid=False)
         self.slide_box.shapes.append(Shape(self.slide_box.self_shape(),color = (255,0,0),line_color = None)) # add outline
         # hitbox for flop
         self.flop_box = Body([0,0],player_size*np.array([1,crouch_fraction],dtype='float'),solid=False)

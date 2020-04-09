@@ -1,7 +1,7 @@
 import pygame, copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
-from Constants import box_size
+from Constants import box_size, G
 
 ##### Useful Identities ################################################################
 
@@ -50,6 +50,8 @@ def rect(size,shift=[0,0]):
 
 # Superclass for all box types, defines size
 class Box(Body): 
+    destruct_length = 5
+
     size = [box_size,box_size]
     destruct_time = 10
     
@@ -58,6 +60,12 @@ class Box(Body):
         super().__init__(position,self.size,True,True,[0,0]) 
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
         self.destruct_counter = -1
+        
+    def move(self):
+        if not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
+            self.vel[1] += G
+        super().move()
+            
        
         
 # Class for metal boxes
@@ -76,9 +84,7 @@ class Metal(Box):
 
 # Class for wooden boxes
 class Wood(Box):
-    
-    destruct_length = 5
-    
+        
     # Initialize wood box
     def __init__(self,position):
         super().__init__(position,wood_color)
@@ -106,6 +112,12 @@ class Metal_Wood(Box):
         for _ in range(4):
             tri.rot90()
             self.shapes.append(copy.deepcopy(tri))
+    
+    def draw(self,canvas,zero = np.array([0,0])):
+        if self.destruct_counter == self.destruct_length: # remove box
+            self.shapes[0].color = None
+            self.shapes[0].line_color = None
+        super().draw(canvas,zero,scale=break_scale)
             
     
 # Class for nitro boxes
@@ -141,7 +153,7 @@ class Nitro(Box):
         
 # Class for tnt boxes
 class Tnt(Box):
-    destruct_time = 50
+
     # Initialize tnt box
     def __init__(self,position):
         super().__init__(position,tnt_color)
