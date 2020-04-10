@@ -82,6 +82,7 @@ class Metal(Box):
                 shp2 = copy.deepcopy(shp)
                 shp2.shift([i,j])
                 self.shapes.append(shp2) # add corner dots
+        self.fruit = 0
 
 # Class for wooden boxes
 class Wood(Box):
@@ -96,7 +97,7 @@ class Wood(Box):
             self.shapes.append(copy.deepcopy(tri))
             
         self.bounces = 1 # regular wooden boxes can take exactly one bounce
-    
+        self.fruit = 1
 
     def draw(self,canvas,zero = np.array([0,0])):
         if self.destruct_counter == self.destruct_length: # remove box
@@ -113,7 +114,8 @@ class Metal_Wood(Box):
         for _ in range(4):
             tri.rot90()
             self.shapes.append(copy.deepcopy(tri))
-    
+        self.fruit = 1
+        
     def draw(self,canvas,zero = np.array([0,0])):
         if self.destruct_counter == self.destruct_length: # remove box
             self.shapes[0].color = None
@@ -187,4 +189,4 @@ class Bouncey_Wood(Wood):
             self.shapes.append(Shape(rect([self.size[0]*0.08,self.size[1]*0.8],[self.size[0]*k/3,0]),color = dark_wood_color,line_color = dark_wood_color,line_width = 2))
             
         self.bounces = 10 # regular wooden boxes can take exactly one bounce, these do 10
-    
+        self.fruit = 1
