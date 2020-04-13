@@ -61,13 +61,16 @@ class Box(Body):
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
         self.destruct_counter = -1
         self.floating = False
+        self.fruit = 0
         
     def move(self):
         if not self.floating and not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
             self.vel[1] += G
         super().move()
-            
-       
+         
+    # box is destructable if it has a positive destruct length
+    def is_destructable(self):
+        return destruct_length>0
         
 # Class for metal boxes
 class Metal(Box):
@@ -82,7 +85,6 @@ class Metal(Box):
                 shp2 = copy.deepcopy(shp)
                 shp2.shift([i,j])
                 self.shapes.append(shp2) # add corner dots
-        self.fruit = 0
 
 # Class for wooden boxes
 class Wood(Box):

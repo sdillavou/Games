@@ -1,5 +1,5 @@
 import pygame, numpy as np
-
+#import pygame.gfxdraw
 
 #####  Useful Matrices  ################################################################
 
@@ -169,7 +169,8 @@ class Shape:
             if not self.color is None: # if filled
                 pygame.draw.polygon(canvas, self.color, draw_nodes+draw_nodes[0:1])
             if not self.line_color is None: # if outlined
-                pygame.draw.polygon(canvas, self.line_color, draw_nodes+draw_nodes[0:1], self.line_width)
+               # aalines(surface, color, closed, points)
+                pygame.draw.aalines(canvas, self.line_color, True, draw_nodes, self.line_width) # line width is now blend
 
     def transform(self,transform): # transform nodes (permanently) with matrix
         self.nodes = [tuple(np.matmul(transform,n)) for n in self.nodes] 

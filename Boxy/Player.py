@@ -77,11 +77,15 @@ class Player(Body):
 ###############################################################################################
     # return relevant hit box (or None if no hit box being used)
     def hit_box(self):
+
         if self.sliding>0:
+            self.slide_box.pos = self.pos*1.0
             return self.slide_box
         elif self.attacking>0:
+            self.attack_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
             return self.attack_box
         elif self.flopping==flop_stun:
+            self.flop_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
             return self.flop_box
         else:
             return None
@@ -104,14 +108,6 @@ class Player(Body):
         
 
 ###############################################################################################
-    def move(self):
-        super().move()
-        self.slide_box.pos = self.pos*1.0
-        self.attack_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
-        self.flop_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
-
-
-###############################################################################################
     # determine state of character
     # gravity, flopping, jumping, running, sliding, attacking, all in one go
     def evolve(self,run_key,crouch_key,jump_key,attack_key,flop_key,jump_hold):
@@ -127,7 +123,7 @@ class Player(Body):
         
         if (self.jumping>0) and jump_hold: # if jump key is held after a jump, mantain velocity
             self.jumping -=1
-        else: # otherwise let gravity do it's thing until the next jump
+        elif is_airborne: # otherwise let gravity do it's thing until the next jump
             self.vel[1] = min(max_fall_speed,self.vel[1]+G)
             self.jumping == 0
            
