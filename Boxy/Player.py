@@ -26,6 +26,7 @@ crawling_speed = 1.5*S
 running_speed = 4.5*S
 accel,decel = 0.15*S,.3*S
 walk_accel = running_speed/3.0
+animate_length = 100
 
 attack_duration = 10
 attack_fraction = np.array([1.2,0.9],dtype='float')
@@ -54,14 +55,18 @@ class Player(Body):
 
 ###############################################################################################
     def __init__(self,position):
-        super().__init__(position,player_size,corporeal=True,solid=True,velocity=[0,0])  
+        super().__init__(position,player_size/1.1,corporeal=True,solid=True,velocity=[0,0])  
         self.crouching = False
         self.sliding = 0
         self.attacking = 0
         self.flopping = 0
         self.jumping = 0
         self.shapes.append(Shape(self.self_shape(),(255,0,255),line_color = None,line_width = None)) # add visible shape for box
+        self.size*= 1.1
         self.jump_anticipation = jump_anticipation
+        self.animate = 0
+        
+        self.shift_path = [[player_size[0]*0.05*math.cos(2.0*i*math.pi/animate_length),player_size[0]*0.1*math.sin(4.0*i*math.pi/animate_length)] for i in range(animate_length)]
         
         # hitbox for attack
         self.attack_box = Body([0,0],player_size*attack_fraction,solid=False)
@@ -92,20 +97,18 @@ class Player(Body):
 
 
 ###############################################################################################        
+    
     def draw(self,canvas,zero = np.array([0,0])):
-        
-        if self.sliding>0:
-            color = sliding_color
-        else:
-            color = character_color
-        for s in self.shapes:
-            s.color = color
-        
+
         if isinstance(self.hit_box(),Body): # draw relevant hit box
             self.hit_box().draw(canvas,zero)
+        elif isinstance(self.resting_on,Body) and not self.crouching:
+            super().draw(canvas,zero+self.shift_path[self.animate])
+            self.animate += 1 + 3*(self.vel[0] !=0)
+            self.animate %= len(self.shift_path)
+            return
         
         super().draw(canvas,zero)
-        
 
 ###############################################################################################
     # determine state of character
@@ -211,7 +214,7 @@ class Player(Body):
         self.crouch()
         #self.transform[1][:] *= crouch_fraction
         #self.pos[1] -= np.matmul(self.transform,self.size)[1] # gain a little height (top of head stays the same)
-        self.vel = np.array([0,flop_bounce],dtype='float') # stop moving horizontally
+        self.vel = np.array([0,flop_bounce],dtype='float') # stop moving horizontally, small bump vertically
         self.flopping = flop_stun
         
     def jump(self):
