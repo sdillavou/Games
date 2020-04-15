@@ -126,8 +126,8 @@ class Body(Vector):
             obj.visual_recursive_shift(vel)
         
     # returns nodes that give the bounding box around this object
-    def self_shape(self):
-        return [(-self.size[0],-self.size[1]),(-self.size[0],self.size[1]),(self.size[0],self.size[1]),(self.size[0],-self.size[1])]
+    def self_shape(self,scale = [1.0,1.0]):
+        return [(-self.size[0]*scale[0],-self.size[1]*scale[1]),(-self.size[0]*scale[0],self.size[1]*scale[1]),(self.size[0]*scale[0],self.size[1]*scale[1]),(self.size[0]*scale[0],-self.size[1]*scale[1])]
     
     # Define this object as 'on' other
     def is_on(self,other):

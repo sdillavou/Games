@@ -14,7 +14,6 @@ bounce_strength = jump_strength*(1.0+crouch_bonus)
 
 slide_duration = 10
 slide_speed = 7.5*S
-sliding_color = (200,0,200)
 slide_fraction = 1.1
 
 max_fall_speed = jump_strength*(1.0+crouch_bonus) 
@@ -38,15 +37,34 @@ flop_stun = 20
 flop_bounce = -5.0*G**2/S/0.8**2
 flop_width = 0.95
 
-character_color = (30,30,30)
+character_color = (150,0,0)
 
 
 #z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
 
-player_size = np.array([box_size*.75,box_size*1.2]) # box size already contains S
+player_size = np.array([box_size*.85,box_size*1.2]) # box size already contains S
 
 ##### Useful Functions  ################################################################
 
+
+def spikey_box(spike_sides,size,approx_spike_size,spike_height):
+    
+    helper = [np.array([-1.0,-1.0]),np.array([1.0,-1.0]),np.array([1.0,1.0]),np.array([-1.0,1.0]),np.array([-1.0,-1.0])]
+    nodes = []
+    
+    for side in range(4):
+        nodes.append(size*helper[side])
+        if spike_sides[side]: # if spikes should be on this side. if not, flat side.
+            spike_num = int(size[side%2]/approx_spike_size)
+            half_spike = (size[side%2]*2.0)/(spike_num*2+2)/2
+            direction = (helper[side+1]-helper[side])
+            step = half_spike*direction # move across this side in this direction
+            add_spike = spike_height*np.array([direction[1],-direction[0]]) # way spikes jut out
+            for k in range(1,spike_num*2+3):
+                nodes.append(size*helper[side]+step*k+(k%2)*add_spike)
+        
+    return [tuple(n) for n in nodes]
+    
 
 ##### Classes           ################################################################
 
@@ -55,14 +73,21 @@ class Player(Body):
 
 ###############################################################################################
     def __init__(self,position):
-        super().__init__(position,player_size/1.1,corporeal=True,solid=True,velocity=[0,0])  
+        super().__init__(position,player_size,corporeal=True,solid=True,velocity=[0,0])  
         self.crouching = False
         self.sliding = 0
         self.attacking = 0
         self.flopping = 0
         self.jumping = 0
-        self.shapes.append(Shape(self.self_shape(),(255,0,255),line_color = None,line_width = None)) # add visible shape for box
-        self.size*= 1.1
+        self.shape_dict={'body':Shape(self.self_shape([0.95,0.8]),character_color,line_color = None,line_width = None)}
+        self.shape_dict['body'].shift([0,-self.size[1]*0.2])
+        self.shape_dict['legs'] = Shape(self.self_shape([0.6,0.6]),tuple(i+50 for i in character_color),line_color = None,line_width = None)
+        self.shape_dict['legs'].shift([0,self.size[1]*0.4])
+        self.shape_dict['crouch_body'] = Shape(self.self_shape(),character_color,line_color = None,line_width = None)
+        
+        for i in self.shape_dict.values(): # create standard list for holding shapes so they can be accessed both ways
+            self.shapes.append(i)
+        
         self.jump_anticipation = jump_anticipation
         self.animate = 0
         
@@ -70,7 +95,7 @@ class Player(Body):
         
         # hitbox for attack
         self.attack_box = Body([0,0],player_size*attack_fraction,solid=False)
-        self.attack_box.shapes.append(Shape(self.attack_box.self_shape(),color = (255,0,0),line_color = None)) # add outline
+        self.attack_box.shapes.append(Shape(spikey_box([0,1,0,1],self.attack_box.size-5,3,5),color = (255,0,0),line_color = None)) # add outline
         # hitbox for slide
         self.slide_box = Body([0,0],player_size*np.array([slide_fraction,crouch_fraction*0.9],dtype='float'),solid=False)
         self.slide_box.shapes.append(Shape(self.slide_box.self_shape(),color = (255,0,0),line_color = None)) # add outline
@@ -99,16 +124,22 @@ class Player(Body):
 ###############################################################################################        
     
     def draw(self,canvas,zero = np.array([0,0])):
-
+        self.animate += 1 + 3*(self.vel[0] !=0)
+        self.animate %= len(self.shift_path)
+        
+        body_shift = self.pos-zero
         if isinstance(self.hit_box(),Body): # draw relevant hit box
             self.hit_box().draw(canvas,zero)
-        elif isinstance(self.resting_on,Body) and not self.crouching:
-            super().draw(canvas,zero+self.shift_path[self.animate])
-            self.animate += 1 + 3*(self.vel[0] !=0)
-            self.animate %= len(self.shift_path)
+        
+        if self.crouching or self.sliding>0:
+            self.shape_dict['crouch_body'].draw(canvas,self.pos-(zero),self.transform)
             return
         
-        super().draw(canvas,zero)
+        if isinstance(self.resting_on,Body):
+            body_shift -=self.shift_path[self.animate]
+        
+        self.shape_dict['legs'].draw(canvas,self.pos-(zero),self.transform)
+        self.shape_dict['body'].draw(canvas,body_shift,self.transform)
 
 ###############################################################################################
     # determine state of character
@@ -162,6 +193,7 @@ class Player(Body):
                # self.transform[0][:] *= 0.8
                 self.transform[1][:] *= (1/crouch_fraction)
                 self.crouching = False
+                
 
                 if not is_airborne: # if coming out of a crouch, give a small velocity to break boxes
                     if self.vel[1]>=0:
