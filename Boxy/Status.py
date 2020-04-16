@@ -1,6 +1,8 @@
 from Gettables import Fruit
 import Box
 import pygame
+from Constants import character_color
+
 
 ##### Useful Identities ################################################################
 
@@ -17,7 +19,7 @@ display_fruit.corporeal,display_fruit.solid = False,False
 display_box = Box.Wood([display_height,display_height])
 display_box.transform *= icon_size/display_box.size[0]
 display_box.corporeal,display_box.solid = False,False
-display_life = Box.Box([display_height,display_height],black,line_color = (20,20,20),line_width = 2)
+display_life = Box.Box([display_height,display_height],character_color,line_color = (20,20,20),line_width = 2)
 display_life.transform *= icon_size/display_life.size[0]
 display_life.corporeal,display_life.solid = False,False
 

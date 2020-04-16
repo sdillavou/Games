@@ -3,7 +3,8 @@ import numpy as np  # pygame, copy,
 from Super_Classes import Body, Shape
 import Box
 import math
-from Constants import G, box_size, S
+from Constants import G, box_size, S, character_color
+
 from Make_Sounds import slide_sound
 
 ##### Useful Identities ################################################################
@@ -14,7 +15,7 @@ bounce_strength = jump_strength*(1.0+crouch_bonus)
 
 slide_duration = 10
 slide_speed = 7.5*S
-slide_fraction = 1.1
+slide_fraction = 1.15
 
 max_fall_speed = jump_strength*(1.0+crouch_bonus) 
 max_fly_speed = slide_speed
@@ -28,11 +29,11 @@ walk_accel = running_speed/3.0
 animate_length = 100
 
 attack_duration = 10
-attack_fraction = np.array([1.2,0.8],dtype='float')
+attack_fraction = np.array([1.2,1.1],dtype='float')
 
 
 attack_color = (160,160,160)
-spike_height = 3.0*S
+spike_height = 5.0*S
 approx_spike_size = 5.0*S
 
 crouch_fraction = 0.7
@@ -41,9 +42,9 @@ crouch_release_vel = -0.0001
 flop_stun = 20
 flop_bounce = -5.0*G**2/S/0.8**2
 flop_width = 0.95
+flop_fraction = 0.15
 
-character_color = (150,0,0)
-
+legs_color = (200,50,50)
 
 #z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
 
@@ -64,7 +65,7 @@ def spikey_box(size,spike_sides=[1,1,1,1]):
         nodes.append(spikey_size*helper[side])
  
         if spike_sides[side]:
-            spike_num = int(2.0*spikey_size[(side)%2]/approx_spike_size)
+            spike_num = int(2.0*spikey_size[(side)%2]/approx_spike_size/2.0)*2 +1
 
             half_spike = (spikey_size[side%2]*2.0)/(float(spike_num)*2.0-2.0)
             direction = (helper[side+1]-helper[side])
@@ -91,8 +92,9 @@ class Player(Body):
         self.jumping = 0
         self.shape_dict={'body':Shape(self.self_shape([0.95,0.9]),character_color,line_color = None,line_width = None)}
         self.shape_dict['body'].shift([0,-self.size[1]*0.1])
-        self.shape_dict['legs'] = Shape(self.self_shape([0.6,0.6]),tuple(i+50 for i in character_color),line_color = None,line_width = None)
-        self.shape_dict['legs'].shift([0,self.size[1]*0.4])
+        self.shape_dict['legs'] = Shape(self.self_shape([0.9,0.01])+[(0,0)],legs_color,line_color = None,line_width = None)
+        self.shape_dict['legs'].shift([0,self.size[1]*.99])
+        self.shape_dict['legs'].nodes[-1] = (0,0)
         self.shape_dict['crouch_body'] = Shape(self.self_shape(),character_color,line_color = None,line_width = None)
         
         for i in self.shape_dict.values(): # create standard list for holding shapes so they can be accessed both ways
@@ -115,24 +117,23 @@ class Player(Body):
         # hitbox for flop
         self.flop_box = Body([0,0],player_size*np.array([flop_width,crouch_fraction],dtype='float'),solid=False)
         self.flop_box.shapes.append(Shape(spikey_box(self.flop_box.size,[0,0,1,0]),color = attack_color,line_color = None)) # add outline
+        self.direction = 1.0
 
 
 ###############################################################################################
-    # return relevant hit box (or None if no hit box being used)
+    # define relevant hit box (or None if no hit box being used)
     def hit_box(self):
-
         if self.sliding>0:                              # shift depending on direction
-            self.slide_box.pos = self.pos*1.0  + (2.0*(self.vel[0]>0)-1)*self.size*[slide_fraction-1.0,0]
+            self.slide_box.pos = self.pos*1.0  + self.direction*self.size*[slide_fraction-1.0,0]
             return self.slide_box
         elif self.attacking>0:
             self.attack_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
             return self.attack_box
         elif self.flopping==flop_stun:
-            self.flop_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
+            self.flop_box.pos = self.pos*1.0 + self.size*[0,flop_fraction]
             return self.flop_box
         else:
             return None
-
 
 ###############################################################################################        
     
@@ -158,7 +159,13 @@ class Player(Body):
     # determine state of character
     # gravity, flopping, jumping, running, sliding, attacking, all in one go
     def evolve(self,run_key,crouch_key,jump_key,attack_key,flop_key,jump_hold):
-       
+    
+    ######### DIRECTION ###########################################
+
+        if self.vel[0] !=0:
+            self.direction = math.copysign(1.0,self.vel[0])
+
+    
     ######### FLAGS ###############################################
 
         is_airborne = not isinstance(self.resting_on,Body)
@@ -254,7 +261,8 @@ class Player(Body):
             self.sliding = slide_duration # 10 frames of sliding!
             slide_sound() # play that sound!
             self.vel[0] = slide_speed*run_key
-    
+       
+        
     def flop(self):
         self.crouch()
         #self.transform[1][:] *= crouch_fraction
@@ -262,11 +270,13 @@ class Player(Body):
         self.vel = np.array([0,flop_bounce],dtype='float') # stop moving horizontally, small bump vertically
         self.flopping = flop_stun
         
+            
     def jump(self):
         self.vel[1] = (-jump_strength*(1+ crouch_bonus*(self.crouching>0)))
         self.is_off() # no longer standing on an object
         self.sliding = 0 # cancels slides 
         self.jumping = jump_key_relevance
+        
 
 
 ####### external use, not used in evolve() #####
@@ -286,4 +296,5 @@ class Player(Body):
 
             self.is_off() # no longer standing on an object
             self.sliding = 0 # cancels slides 
+        
        
