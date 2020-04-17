@@ -1,7 +1,7 @@
 from Gettables import Fruit
 import Box
 import pygame
-from Constants import character_color
+from Constants import character_color, display_size
 
 
 ##### Useful Identities ################################################################
@@ -10,7 +10,9 @@ icon_size = 25.0 # does not scale with game
 icon_spacing = 8*icon_size
 display_height = icon_size*1.5
 font = pygame.font.Font('freesansbold.ttf', int(icon_size*1.7))
+font2 = pygame.font.Font('freesansbold.ttf', int(icon_size*0.8))
 black = (0,0,0)
+gray = (150,150,150)
 
 
 display_fruit = Fruit([display_height,display_height])
@@ -51,9 +53,12 @@ class Status():
             self.display_list[key].draw(gameDisplay,[-icon_spacing*k,0])
             text = font.render(str(self.counters[key]), True, black, None)
             textRect = text.get_rect()  
-            textRect.center = (icon_spacing*k + display_height*2 + textRect[3]/2,display_height+icon_size*0.15) 
+            textRect.center = (icon_spacing*k + display_height*2 + textRect[2]/2,display_height+icon_size*0.15) 
             gameDisplay.blit(text, textRect) 
 
-       
+        text2 = font2.render('Z: Attack    X: Jump    C: Crouch/Slide/Flop', True, gray, None)
+        textRect2 = text2.get_rect()  
+        textRect2.center = (display_size[0]- textRect2[2]/2-icon_size,display_height+icon_size*0.1) 
+        gameDisplay.blit(text2, textRect2) 
       
        

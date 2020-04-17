@@ -7,3 +7,4 @@ G = 0.9*S # strength of gravity
 box_size = 30*S
 
 character_color = (31, 61, 12)
+display_size = (1000,600)
