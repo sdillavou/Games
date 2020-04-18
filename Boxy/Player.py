@@ -3,6 +3,7 @@ import numpy as np  # pygame, copy,
 from Super_Classes import Body, Shape
 import Box
 import math
+import copy
 from Constants import G, box_size, S, character_color
 
 from Make_Sounds import slide_sound
@@ -45,10 +46,15 @@ flop_width = 0.95
 flop_fraction = 0.15
 
 legs_color = (200,50,50)
+hand_color = legs_color
+eye_color = (200,200,200)
 
 #z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
 
 player_size = np.array([box_size*.85,box_size*1.2]) # box size already contains S
+
+
+rot90mat = np.array([[0,-1],[1,0]],dtype=float)
 
 ##### Useful Functions  ################################################################
 
@@ -92,10 +98,15 @@ class Player(Body):
         self.jumping = 0
         self.shape_dict={'body':Shape(self.self_shape([0.95,0.9]),character_color,line_color = None,line_width = None)}
         self.shape_dict['body'].shift([0,-self.size[1]*0.1])
-        self.shape_dict['legs'] = Shape(self.self_shape([0.9,0.01])+[(0,0)],legs_color,line_color = None,line_width = None)
+        self.shape_dict['legs'] = Shape(self.self_shape([0.9,0.01]),legs_color,line_color = None,line_width = None)
         self.shape_dict['legs'].shift([0,self.size[1]*.99])
         self.shape_dict['legs'].nodes[-1] = (0,0)
         self.shape_dict['crouch_body'] = Shape(self.self_shape(),character_color,line_color = None,line_width = None)
+        self.shape_dict['hand'] = Shape(spikey_box(self.size*[0.2,0.25],spike_sides=[0,0,1,0]),hand_color,line_color = None,line_width = None)
+        self.shape_dict['hand'].shift([0,self.size[1]*0.3])
+        self.shape_dict['eye'] = Shape(self.self_shape([0.1,0.1]),eye_color,line_color = None,line_width = None)
+        self.shape_dict['eye'].shift([0,-self.size[1]*0.7])
+        
         
         for i in self.shape_dict.values(): # create standard list for holding shapes so they can be accessed both ways
             self.shapes.append(i)
@@ -103,7 +114,7 @@ class Player(Body):
         self.jump_anticipation = jump_anticipation
         self.animate = 0
         
-        self.shift_path = [[player_size[0]*0.05*math.cos(2.0*i*math.pi/animate_length),player_size[0]*0.1*math.sin(4.0*i*math.pi/animate_length)] for i in range(animate_length)]
+        self.shift_path = [np.array([player_size[0]*0.05*math.cos(2.0*i*math.pi/animate_length),player_size[0]*0.1*math.sin(4.0*i*math.pi/animate_length)], dtype ='float' )for i in range(animate_length)]
         
         # hitbox for attack
         self.attack_box = Body([0,0],player_size*attack_fraction,solid=False)
@@ -142,19 +153,36 @@ class Player(Body):
         self.animate %= len(self.shift_path)
         body_shift = self.pos-zero
         self.shape_dict['legs'].draw(canvas,self.pos-(zero),self.transform)
+        hand_shift = 0.0
+        eye_shift = self.direction*self.size*[0.5,0.0]
+        hand_trans = copy.deepcopy(self.transform)
 
+        
         if isinstance(self.hit_box(),Body): # draw relevant hit box
             self.hit_box().draw(canvas,zero)
         
         if self.crouching or self.sliding>0:
             self.shape_dict['crouch_body'].draw(canvas,self.pos-(zero),self.transform)
+            
+            if self.flopping>0:
+                for k in [-1.0, 1.0]:
+                    self.shape_dict['hand'].draw(canvas,body_shift+[k*self.size[0]*0.8,0])
+                    self.shape_dict['eye'].draw(canvas,body_shift+k*eye_shift+[0,self.size[0]*0.1],self.transform*[3.0,1.0])
+            else:
+                self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,np.matmul(self.transform,self.direction*rot90mat))
+                self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
+        
             return
         
         if isinstance(self.resting_on,Body) and not self.attacking>0:
-            body_shift -=self.shift_path[self.animate]
-        
+            body_shift -= self.direction*self.shift_path[self.animate]
+            hand_shift = -self.direction*self.shift_path[self.animate]*[4.0,0.5]
+        else:
+            hand_trans[1,1] *= -1
         self.shape_dict['body'].draw(canvas,body_shift,self.transform)
-
+        self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,hand_trans)
+        self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
+        
 ###############################################################################################
     # determine state of character
     # gravity, flopping, jumping, running, sliding, attacking, all in one go

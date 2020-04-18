@@ -21,7 +21,7 @@ class Fruit(Body):
     def __init__(self,position):
         x = 10.0*S
         super().__init__(position,[x,x],corporeal=True,solid=False,velocity=[0,0])  
-        N = 50
+        N = 10
         nodes = [(0,-x*3/5)]+[(x*math.sin(2*math.pi*(i+int(N/10))/N),-x*math.cos(2*math.pi*(i+int(N/10))/N)) for i in range(N+1-2*int(N/10))]
         
         
