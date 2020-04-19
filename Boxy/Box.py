@@ -2,6 +2,8 @@ import pygame, copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
 from Constants import box_size, G
+from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound
+
 
 ##### Useful Identities ################################################################
 
@@ -57,7 +59,7 @@ class Box(Body):
     
     # Initialize box with location and color
     def __init__(self,position,color,line_color = (0,0,0),line_width = 2):   
-        super().__init__(position,self.size,True,True,[0,0]) 
+        Body.__init__(self,position,self.size,True,True,[0,0]) 
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
         self.destruct_counter = -1
         self.floating = False
@@ -66,7 +68,7 @@ class Box(Body):
     def move(self):
         if not self.floating and not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
             self.vel[1] += G
-        super().move()
+        Body.move(self)
          
     # box is destructable if it has a positive destruct length
     def is_destructable(self):
@@ -77,7 +79,7 @@ class Metal(Box):
     destruct_time = -1 
     # Initialize metal box
     def __init__(self,position):
-        super().__init__(position,metal_color)
+        Box.__init__(self,position,metal_color)
         shp = Shape(self.self_shape(),color=None,line_color = (0,0,0),line_width = 2)
         shp.transform([[0.02,0],[0,0.02]])
         for i in [-self.size[0]*.7, self.size[0]*.7]:
@@ -91,7 +93,7 @@ class Wood(Box):
         
     # Initialize wood box
     def __init__(self,position):
-        super().__init__(position,wood_color)
+        Box.__init__(self,position,wood_color)
         shp = [(-self.size[0]*0.65,-self.size[0]*0.8),(self.size[0]*0.65,-self.size[0]*0.8),(0,-self.size[0]*0.15)]
         tri = Shape(shp,color = dark_wood_color,line_color = dark_wood_color,line_width = 2)
         for _ in range(4):
@@ -105,7 +107,57 @@ class Wood(Box):
         if self.destruct_counter == self.destruct_length: # remove box
             self.shapes[0].color = None
             self.shapes[0].line_color = None
-        super().draw(canvas,zero,scale=break_scale)
+        Body.draw(self,canvas,zero,scale=break_scale)
+        
+    def destroy(self):
+        Body.destroy(self)
+        wood_break_sound()
+        
+    def interact(self,player):
+        jump_timer,jump_hold = 0,0
+        
+        # if box is attacked in any way it breaks and doesn't impede player
+        if isinstance(player.hit_box(),Body):
+            if player.hit_box().overlap(self):
+                self.destroy()
+                player.current_status.counters['fruit'] += self.fruit
+                player.current_status.counters['boxes'] += 1
+                return
+        
+        dim,side,converging = Body.interact(self,player) # solid interactions
+        
+        if dim > -1: # self and player overlap
+            
+            # will player bounce
+            bounce = (dim == 1) and converging
+            if bounce:
+                self.bounces -=1
+            
+            #will box break
+            break_box = (bounce and (self.bounces == 0 or self.vel[1]>0)) # falling bouncy boxes break
+            
+            # edge cases where box must break when hit from below (dim == 1 already if bounce)
+            if bounce and side == 1:
+                # player on a solid object and hitting underside or pressed jump this round (effectively a squeeze)
+                if isinstance(player.resting_on,Body) or (jump_timer == player.jump_anticipation and player.jumping > 0):
+                    break_box = True
+                    bounce = False # no need to bounce
+     
+
+            if break_box:
+                wood_break_sound()
+                self.destroy()
+                player.current_status.counters['fruit'] += self.fruit
+                player.current_status.counters['boxes'] += 1
+                
+            if bounce: 
+                player.bounce(jump_timer*jump_hold,side) # first input is jump was recently pressed and still held
+                if not break_box:
+                    if isinstance(self,Bouncey_Wood):
+                        player.current_status.counters['fruit'] += 1
+                        wood_bounce_sound()
+
+        
 
 class Metal_Wood(Box):
     # Initialize wood box
@@ -123,7 +175,23 @@ class Metal_Wood(Box):
             self.shapes[0].color = None
             self.shapes[0].line_color = None
         super().draw(canvas,zero,scale=break_scale)
+    
+    # interactions are standard solid unmoving UNLESS player is flopping
+    def interact(self,player):
+        if player.flopping == player.flop_stun:
+            if player.hit_box().overlap(self):
+                self.destroy()
+                player.current_status.counters['fruit'] += self.fruit
+                player.current_status.counters['boxes'] += 1
+               
+                return
+        
+        Body.interact(self,player)
             
+    def destroy(self):
+        Body.destroy(self)
+        wood_break_sound()
+    
     
 # Class for nitro boxes
 class Nitro(Box):
@@ -154,7 +222,19 @@ class Nitro(Box):
             self.temporary_shift = [0,0]
         
         super().draw(canvas,zero,scale = explode_scale)
-        
+    
+    def destroy(self):
+        Body.destroy(self)
+        boom_sound()
+    
+    # interactions are always death with nitro, baby.
+    def interact(self,player):   
+        if self.overlap(player):
+            player.dead = True
+            player.current_status.counters['boxes'] += 1
+            self.destroy()
+            
+            
         
 # Class for tnt boxes
 class Tnt(Box):
@@ -179,7 +259,14 @@ class Tnt(Box):
         if light_up:
             self.shapes[0].color = tnt_color
             self.cooldown = 60
-            
+     
+    def destroy(self):
+        Body.destroy(self)
+        boom_sound()   
+      
+    # tricky interactions with this here tnt box
+    def interact(self,player):
+        raise Exception('havent done this yet, bucko')
             
 # Class for wooden boxes
 class Bouncey_Wood(Wood):

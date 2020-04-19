@@ -8,6 +8,7 @@ from Constants import G, box_size, S, character_color
 
 from Make_Sounds import slide_sound
 
+
 ##### Useful Identities ################################################################
 
 jump_strength = 8.0*G**2/S/0.8**2
@@ -88,6 +89,8 @@ def spikey_box(size,spike_sides=[1,1,1,1]):
 class Player(Body):
 # Class for main character  
 
+    flop_stun = flop_stun
+
 ###############################################################################################
     def __init__(self,position):
         super().__init__(position,player_size,corporeal=True,solid=True,velocity=[0,0])  
@@ -128,9 +131,11 @@ class Player(Body):
         # hitbox for flop
         self.flop_box = Body([0,0],player_size*np.array([flop_width,crouch_fraction],dtype='float'),solid=False)
         self.flop_box.shapes.append(Shape(spikey_box(self.flop_box.size,[0,0,1,0]),color = attack_color,line_color = None)) # add outline
+        
         self.direction = 1.0
-
-
+        self.dead = False
+        
+        
 ###############################################################################################
     # define relevant hit box (or None if no hit box being used)
     def hit_box(self):
@@ -140,7 +145,7 @@ class Player(Body):
         elif self.attacking>0:
             self.attack_box.pos = self.pos*1.0 + self.size*[0,1.0-attack_fraction[1]]
             return self.attack_box
-        elif self.flopping==flop_stun:
+        elif self.flopping==self.flop_stun:
             self.flop_box.pos = self.pos*1.0 + self.size*[0,flop_fraction]
             return self.flop_box
         else:
@@ -296,7 +301,7 @@ class Player(Body):
         #self.transform[1][:] *= crouch_fraction
         #self.pos[1] -= np.matmul(self.transform,self.size)[1] # gain a little height (top of head stays the same)
         self.vel = np.array([0,flop_bounce],dtype='float') # stop moving horizontally, small bump vertically
-        self.flopping = flop_stun
+        self.flopping = self.flop_stun
         
             
     def jump(self):
@@ -325,4 +330,6 @@ class Player(Body):
             self.is_off() # no longer standing on an object
             self.sliding = 0 # cancels slides 
         
-       
+        
+        
+      

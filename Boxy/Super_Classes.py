@@ -148,7 +148,37 @@ class Body(Vector):
         self.solid = False
         for bod in self.on_me: # all objects once on this body are now not on it anymore
             bod.is_off()
+            
 
+    # interact with player, self is assumed to be indestructable, non-bouncey, and solid
+    def interact(self,player):       
+        dim,gap = player.overlap_dim(self)
+        side,converging = None,None
+
+        if dim>-1: # overlap!
+           # print(dim)
+            side = 2*(player.pos[dim] > self.pos[dim]) - 1
+            converging = (player.vel[dim]-self.vel[dim])*side < 0 # if player is moving towards object
+
+           # record squeeze, remove overlap, reduce velocity in this dimension to 0
+                #squeeze[dim][int(player.pos[dim] > i.pos[dim])] = i
+            player.pos[dim] += side*gap
+            if converging: 
+                player.vel[dim] = 0.0
+
+        if side == -1 and dim == 1:
+            player.is_on(self) # player above, colliding vertically
+
+        else: # if not colliding from above (including not collidin
+            
+            if player.resting_on == self: # if player was on this Body, no more!
+                player.is_off()
+                player.vel += self.vel #retain velocity from moving object
+
+            if player in self.on_me:
+                    self.on_me.remove(player)
+        
+        return dim,side,converging
         
 ########################################################################################
    

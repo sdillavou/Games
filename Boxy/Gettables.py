@@ -1,6 +1,8 @@
 import pygame, copy, math, numpy as np
 from Super_Classes import Body, Shape
 from Constants import S
+from Make_Sounds import fruit_sound
+
 
 ##### Useful Identities ################################################################
 
@@ -28,3 +30,15 @@ class Fruit(Body):
         #nodes = [(0,-x/2),(x/4,-3*x/4),(3*x/4,-3*x/4),(x,-2*x/4),(3*x/4,2*x/4),(2*x/4,3*x/4),(-2*x/4,3*x/4),(-3*x/4,2*x/4),(-x,-2*x/4),(-3*x/4,-3*x/4),(-x/4,-3*x/4)]
         
         self.shapes.append(Shape(nodes,color=(255,0,0),line_color=(150,0,0),line_width=2)) # add visible shape for box
+
+    # make a sound and get rid of that fruit!
+    def destroy(self):
+        super().destroy()
+        fruit_sound()
+    
+    # resolve interaction with player
+    def interact(self,player):
+        if player.overlap(self):
+            self.destroy()
+            player.current_status.counters['fruit'] += 1
+            
