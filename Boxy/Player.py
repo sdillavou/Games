@@ -1,12 +1,12 @@
 import numpy as np  # pygame, copy,
 #from random import randint
-from Super_Classes import Body, Shape
+from Super_Classes import Body, Shape, Vector
 import Box
 import math
 import copy
-from Constants import G, box_size, S, character_color
+from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color
 
-from Make_Sounds import slide_sound, thud_sound
+from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound
 
 
 ##### Useful Identities ################################################################
@@ -46,14 +46,14 @@ flop_bounce = -5.0*G**2/S/0.8**2
 flop_width = 0.95
 flop_fraction = 0.15
 
+invulnerable_timer = 60
+
 legs_color = (200,50,50)
 hand_color = legs_color
-eye_color = (200,200,200)
+protector_color = (60,60,255)
+protector_line_color = (255,255,255)
 
-#z_proj = [0.2,0.1,-1] # shift of 1 in z corresponds to this much shift in projected view
-
-player_size = np.array([box_size*.85,box_size*1.2]) # box size already contains S
-
+player_size = np.array([box_size*.85,box_size*1.2],dtype='float') # box size already contains S
 
 rot90mat = np.array([[0,-1],[1,0]],dtype=float)
 
@@ -133,8 +133,10 @@ class Player(Body):
         self.flop_box.shapes.append(Shape(spikey_box(self.flop_box.size,[0,0,1,0]),color = attack_color,line_color = None)) # add outline
         
         self.direction = 1.0
-        self.dead = False
+        self.invulnerable = 0
+        self.protection = 0
         
+        self.protector = Protector(self.pos - self.size*[self.direction,1.0])
         
 ###############################################################################################
     # define relevant hit box (or None if no hit box being used)
@@ -151,42 +153,72 @@ class Player(Body):
         else:
             return None
 
-###############################################################################################        
+###############################################################################################
+    # get hit by something (die if no protection)
+    def get_hit(self):
+        if not self.invulnerable:
+            ouch_sound()
+            self.protection -= 1
+            if self.protection>=0: # if any hits left, become invulnerable temporarily
+                self.invulnerable = invulnerable_timer
+                power_down_sound()
+        # if invulnerable, ignore this hit
+
+############################################################################################### 
+    # get hit by something (die if no protection)
+    def move(self):
+        Vector.move(self) # no need to move objects ON self, as there are none
+        self.protector.move() # move the protector
+        
+############################################################################################### 
+
+
     
     def draw(self,canvas,zero = np.array([0,0])):
         self.animate += 1 + 3*(self.vel[0] !=0)
         self.animate %= len(self.shift_path)
-        body_shift = self.pos-zero
-        self.shape_dict['legs'].draw(canvas,self.pos-(zero),self.transform)
-        hand_shift = 0.0
-        eye_shift = self.direction*self.size*[0.5,0.0]
-        hand_trans = copy.deepcopy(self.transform)
+        
+        
+        if not (self.invulnerable and (self.animate % 5) == 0): # don't draw player every 5 frames when invulnerable
+        
 
-        
-        if isinstance(self.hit_box(),Body): # draw relevant hit box
-            self.hit_box().draw(canvas,zero)
-        
-        if self.crouching or self.sliding>0:
-            self.shape_dict['crouch_body'].draw(canvas,self.pos-(zero),self.transform)
-            
-            if self.flopping>0:
-                for k in [-1.0, 1.0]:
-                    self.shape_dict['hand'].draw(canvas,body_shift+[k*self.size[0]*0.8,0])
-                    self.shape_dict['eye'].draw(canvas,body_shift+k*eye_shift+[0,self.size[0]*0.1],self.transform*[3.0,1.0])
-            else:
-                self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,np.matmul(self.transform,self.direction*rot90mat))
+            body_shift = self.pos-zero
+            self.shape_dict['legs'].draw(canvas,self.pos-(zero),self.transform)
+            hand_shift = 0.0
+            eye_shift = self.direction*self.size*[0.5,0.0]
+            hand_trans = copy.deepcopy(self.transform)
+
+
+            if isinstance(self.hit_box(),Body): # draw relevant hit box
+                self.hit_box().draw(canvas,zero)
+
+            if self.crouching: # includes sliding and flopping
+                self.shape_dict['crouch_body'].draw(canvas,self.pos-(zero),self.transform)
+
+                if self.flopping>0:
+                    for k in [-1.0, 1.0]:
+                        self.shape_dict['hand'].draw(canvas,body_shift+[k*self.size[0]*0.8,0])
+                        self.shape_dict['eye'].draw(canvas,body_shift+k*eye_shift+[0,self.size[0]*0.1],self.transform*[3.0,1.0])
+                else:
+                    self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,np.matmul(self.transform,self.direction*rot90mat))
+                    self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
+
+            else: # if not crouched
+
+                if isinstance(self.resting_on,Body) and not self.attacking>0:
+                    body_shift -= self.direction*self.shift_path[self.animate]
+                    hand_shift = -self.direction*self.shift_path[self.animate]*[4.0,0.5]
+                else:
+                    hand_trans[1,1] *= -1
+                self.shape_dict['body'].draw(canvas,body_shift,self.transform)
+                self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,hand_trans)
                 self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
         
-            return
         
-        if isinstance(self.resting_on,Body) and not self.attacking>0:
-            body_shift -= self.direction*self.shift_path[self.animate]
-            hand_shift = -self.direction*self.shift_path[self.animate]*[4.0,0.5]
-        else:
-            hand_trans[1,1] *= -1
-        self.shape_dict['body'].draw(canvas,body_shift,self.transform)
-        self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,hand_trans)
-        self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
+        if self.protection>0: # if protector is active, modify its velocity 
+            
+            self.protector.shapes[0].visible = self.protection == 2 #outermost outline only if double protector    
+            self.protector.draw(canvas,zero,self.direction)
         
 ###############################################################################################
     # determine state of character
@@ -198,7 +230,13 @@ class Player(Body):
         if self.vel[0] !=0:
             self.direction = math.copysign(1.0,self.vel[0])
 
-    
+    ######### INVULNERABILITY and PROTECTOR #######################
+
+        if self.invulnerable:
+            self.invulnerable -=1
+            
+        self.protector.vel = 0.7*self.protector.vel + 0.03*(self.pos + self.shift_path[self.animate]*[2,4] - self.size*[self.direction,1.0] - self.protector.pos)
+            
     ######### FLAGS ###############################################
 
         is_airborne = not isinstance(self.resting_on,Body)
@@ -333,5 +371,25 @@ class Player(Body):
             self.sliding = 0 # cancels slides 
         
         
+##### PROTECTOR CLASS  #################################################################
+
+
+class Protector(Body):
+    
+    def __init__(self,position):   
+        Body.__init__(self,position,protector_size,False,False,[0,0]) 
+        self.shapes.append(Shape(self.self_shape([1.1,1.1]),protector_color,None,line_width = 2,visible=False)) 
+        self.shapes.append(Shape(self.self_shape(),protector_line_color,None,line_width = 2)) 
+        self.shapes.append(Shape(self.self_shape([0.9,0.9]),protector_color,None,line_width = 2))
         
-      
+        self.shapes.append(Shape(self.self_shape([0.1,0.1]),eye_color,None,line_width = 2)) 
+        self.shapes[-1].shift(self.size*[0.3,-0.3]) # eye facing one way
+        self.shapes.append(Shape(self.self_shape([0.1,0.1]),eye_color,None,line_width = 2)) # add visible shape
+        self.shapes[-1].shift(self.size*[-0.3,-0.3]) # eye facing the other way
+    def move(self):
+        Vector.move(self)
+        
+    def draw(self,canvas,zero,direction):
+        self.shapes[-1].visible = direction == -1
+        self.shapes[-2].visible = direction == 1
+        Body.draw(self,canvas,zero)

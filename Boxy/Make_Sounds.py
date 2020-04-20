@@ -4,9 +4,15 @@ from random import randint
 
 
 #wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
-wood_bounce = pygame.mixer.Sound('sounds/bounce.wav')
-wood_bounce.set_volume(0.4)
+#wood_bounce = pygame.mixer.Sound('sounds/bounce.wav')
+#wood_bounce.set_volume(0.4)
+#wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
+wood_bounce2 = pygame.mixer.Sound('sounds/bounce.flac')
+wood_bounce2.set_volume(0.3)
+
 boom = pygame.mixer.Sound('sounds/boom.wav')
+
+protection = pygame.mixer.Sound('sounds/protection.wav')
 
 #wood_break = pygame.mixer.Sound('sounds/wood_bounce.wav')
 #wood_break.set_volume(0.5)
@@ -17,6 +23,13 @@ blip = pygame.mixer.Sound('sounds/blip.wav')
 blip.set_volume(0.15)
 
 
+ouch = pygame.mixer.Sound('sounds/ouch.wav')
+#ouch.set_volume(0.15)
+
+power_down = pygame.mixer.Sound('sounds/ouch.wav')
+#power_down.set_volume(0.15)
+
+
 thud = pygame.mixer.Sound('sounds/thud.wav')
 
 
@@ -25,7 +38,7 @@ for i in wood_break:
     i.set_volume(0.3)
 
 def wood_bounce_sound():
-    pygame.mixer.Sound.play(wood_bounce)
+    pygame.mixer.Sound.play(wood_bounce2)
     
 def boom_sound():
     pygame.mixer.Sound.play(boom)
@@ -41,3 +54,12 @@ def fruit_sound():
     
 def thud_sound():
     pygame.mixer.Sound.play(thud)
+    
+def protection_sound():
+    pygame.mixer.Sound.play(protection)
+    
+def ouch_sound():
+    pygame.mixer.Sound.play(ouch)
+    
+def power_down_sound():
+    pygame.mixer.Sound.play(power_down)

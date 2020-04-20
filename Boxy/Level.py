@@ -38,6 +38,7 @@ class Level:
             p0.corporeal = False
 
 
+           
             a = Box.Nitro(p1.pos - [-box_size*100/30,p1.size[1]+box_size])
             a1 = Box.Metal(a.pos - [0,box_size*2])
             a2 = Box.Nitro(a.pos - [box_size*2,0])
@@ -45,10 +46,13 @@ class Level:
             b2 = Box.Bouncey_Wood(path[int(N/2)]-[0,box_size+d1.size[1]])
             b3 = Box.Metal_Wood(path[int(N/2)]-[0,box_size*3+d1.size[1]])
             b4 = Box.Wood(path[int(N/2)]-[0,box_size*5+d1.size[1]])
+            
+            a0 = Box.Protection(a2.pos - [box_size*2,0])
+            a01 = Box.Protection(a0.pos - [0,box_size*2])
 
 
             self.master_platform_list = [p1,p2,d1,d2]
-            self.master_box_list = [a,a1,a2,a3,b2,b3,b4]
+            self.master_box_list = [a0,a01,a,a1,a2,a3,b2,b3,b4]
             self.background_list = [p0]
 
 

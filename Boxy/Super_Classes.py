@@ -20,7 +20,7 @@ class Vector:
     
     # Move this object
     def move(self):
-        self.pos = self.pos + self.vel # add vel to pos
+        self.pos += self.vel # add vel to pos
     
     # print info (for debugging)
     def info(self):

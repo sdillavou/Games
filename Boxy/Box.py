@@ -1,8 +1,8 @@
 import pygame, copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
-from Constants import box_size, G
-from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound
+from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color
+from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, protection_sound
 
 
 ##### Useful Identities ################################################################
@@ -228,7 +228,7 @@ class Nitro(Box):
     # interactions are always death with nitro, baby.
     def interact(self,player):   
         if self.overlap(player) or self.overlap(player.hit_box()):
-            player.dead = True
+            player.get_hit()
             player.current_status.counters['boxes'] += 1
             self.destroy()
             
@@ -276,3 +276,24 @@ class Bouncey_Wood(Wood):
             
         self.bounces = 10 # regular wooden boxes can take exactly one bounce, these do 10
         self.fruit = 1
+        
+           
+# Class for wooden boxes
+class Protection(Wood):
+    # Initialize protection wood box
+    def __init__(self,position):
+        super().__init__(position)   
+        self.shapes.append(Shape(self.self_shape(protector_size/box_size),protector_line_color,None,line_width = 2)) 
+        self.shapes.append(Shape(self.self_shape(0.9*protector_size/box_size),protector_color,None,line_width = 2)) 
+        self.shapes.append(Shape(self.self_shape([0.1,0.1]*protector_size/box_size),eye_color,None,line_width = 2))
+        self.shapes[-1].shift(self.size*[0.3,-0.3]*protector_size/box_size) # eye facing one way
+        self.shapes.append(Shape(self.self_shape([0.1,0.1]*protector_size/box_size),eye_color,None,line_width = 2)) 
+        self.shapes[-1].shift(self.size*[-0.3,-0.3]*protector_size/box_size) # eye facing the other way
+        self.fruit = 0 # no fruit inside
+        
+    def interact(self,player):
+        Wood.interact(self,player)
+        if not self.corporeal: # got destroyed by above interaction
+            player.protection += 1 # add protection from breaking this box
+            protection_sound()   
+      
