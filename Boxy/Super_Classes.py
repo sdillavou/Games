@@ -71,7 +71,10 @@ class Body(Vector):
         
     # do two bodies overlap
     def overlap(self,other): # could remove transform ability to speed computation?
-        return all(abs(self.pos-other.pos) <= (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size)))
+        if other == None:
+            return False
+        else:
+            return all(abs(self.pos-other.pos) <= (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size)))
        
     # returns dimension and overlap size of shallowest overlap (-1,None if no overlap)
     def overlap_dim(self,other): # could remove transform ability to speed computation?

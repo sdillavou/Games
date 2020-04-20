@@ -17,6 +17,9 @@ blip = pygame.mixer.Sound('sounds/blip.wav')
 blip.set_volume(0.15)
 
 
+thud = pygame.mixer.Sound('sounds/thud.wav')
+
+
 wood_break= [pygame.mixer.Sound('sounds/box_break'+str(i)+'.wav') for i in range(7)]
 for i in wood_break:
     i.set_volume(0.3)
@@ -35,3 +38,6 @@ def slide_sound():
     
 def fruit_sound():
     pygame.mixer.Sound.play(blip)
+    
+def thud_sound():
+    pygame.mixer.Sound.play(thud)

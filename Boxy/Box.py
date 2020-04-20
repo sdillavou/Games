@@ -117,12 +117,11 @@ class Wood(Box):
         jump_timer,jump_hold = 0,0
         
         # if box is attacked in any way it breaks and doesn't impede player
-        if isinstance(player.hit_box(),Body):
-            if player.hit_box().overlap(self):
-                self.destroy()
-                player.current_status.counters['fruit'] += self.fruit
-                player.current_status.counters['boxes'] += 1
-                return
+        if self.overlap(player.hit_box()):
+            self.destroy()
+            player.current_status.counters['fruit'] += self.fruit
+            player.current_status.counters['boxes'] += 1
+            return
         
         dim,side,converging = Body.interact(self,player) # solid interactions
         
@@ -178,13 +177,12 @@ class Metal_Wood(Box):
     
     # interactions are standard solid unmoving UNLESS player is flopping
     def interact(self,player):
-        if player.flopping == player.flop_stun:
-            if player.hit_box().overlap(self):
-                self.destroy()
-                player.current_status.counters['fruit'] += self.fruit
-                player.current_status.counters['boxes'] += 1
-               
-                return
+        if player.flopping == player.flop_stun and self.overlap(player.hit_box()):
+            self.destroy()
+            player.current_status.counters['fruit'] += self.fruit
+            player.current_status.counters['boxes'] += 1
+
+            return
         
         Body.interact(self,player)
             
@@ -229,11 +227,10 @@ class Nitro(Box):
     
     # interactions are always death with nitro, baby.
     def interact(self,player):   
-        if self.overlap(player):
+        if self.overlap(player) or self.overlap(player.hit_box()):
             player.dead = True
             player.current_status.counters['boxes'] += 1
             self.destroy()
-            
             
         
 # Class for tnt boxes

@@ -6,7 +6,7 @@ import math
 import copy
 from Constants import G, box_size, S, character_color
 
-from Make_Sounds import slide_sound
+from Make_Sounds import slide_sound, thud_sound
 
 
 ##### Useful Identities ################################################################
@@ -219,6 +219,8 @@ class Player(Body):
         
         if self.flopping>0:    # if flopping, that's all that's going on
             if not is_airborne:
+                if self.flopping == self.flop_stun: #thud when hitting the ground
+                    thud_sound()
                 self.flopping -=1 # wait out stun
             return
                             
