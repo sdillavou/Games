@@ -24,9 +24,9 @@ blip.set_volume(0.15)
 
 
 ouch = pygame.mixer.Sound('sounds/ouch.wav')
-#ouch.set_volume(0.15)
+ouch.set_volume(0.7)
 
-power_down = pygame.mixer.Sound('sounds/ouch.wav')
+power_down = pygame.mixer.Sound('sounds/power_down.wav')
 #power_down.set_volume(0.15)
 
 
@@ -63,3 +63,4 @@ def ouch_sound():
     
 def power_down_sound():
     pygame.mixer.Sound.play(power_down)
+    

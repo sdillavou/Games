@@ -47,6 +47,19 @@ def rect(size,shift=[0,0]):
         return [(-size[0]+shift[0],-size[1]+shift[1]),(-size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],-size[1]+shift[1])]
 
 
+    
+                    
+def resolve_fall(bod,bod2): #resolving fall for non-character objects
+    if bod2.solid and bod2.pos[1]>bod.pos[1]: # bod 2 is below and solid
+        dim,gap = bod.overlap_dim(bod2)
+        if dim == 1 and gap>=0.1:# bod2 is overlapping vertically
+            bod.is_on(bod2)
+            bod.pos[1] -= gap #shift bod up!
+            return True # solved!
+    return False
+
+
+
 ##### Classes           ################################################################
 
 

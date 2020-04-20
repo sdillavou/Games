@@ -92,8 +92,7 @@ class Level:
             self.foreground_list = [] 
             self.master_gettable_list = []
             self.player_start = [0.0,0.0]
-    
-        
+
     
     def reset(self):
         
@@ -101,5 +100,21 @@ class Level:
         self.box_list = copy.deepcopy(self.master_box_list)
         self.gettable_list = copy.deepcopy(self.master_gettable_list)
         self.foreground_list = []
+             
+        self.move_objects()
 
-  
+    def move_objects(self,sound=lambda:None):
+    
+     ## link all boxes to platforms they are standing on
+        for bod in self.box_list:
+            bod.move() # boxes not floating and not resting on will accelerate down
+            if bod.vel[1] >0 and bod.solid:
+                for bod2 in self.platform_list+self.box_list:
+                    if Box.resolve_fall(bod,bod2):
+                        if not isinstance(bod2,Box.Box) or bod2.vel[1] == 0:
+                            sound()
+                            bod.vel[1] = 0
+                            break
+                            
+        for bod in self.platform_list:
+            bod.move()

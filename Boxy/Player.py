@@ -46,7 +46,7 @@ flop_bounce = -5.0*G**2/S/0.8**2
 flop_width = 0.95
 flop_fraction = 0.15
 
-invulnerable_timer = 60
+invulnerable_timer = 45
 
 legs_color = (200,50,50)
 hand_color = legs_color
