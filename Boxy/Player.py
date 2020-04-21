@@ -21,8 +21,9 @@ slide_fraction = 1.15
 
 max_fall_speed = jump_strength*(1.0+crouch_bonus) 
 max_fly_speed = slide_speed
-jump_key_relevance = 8 # for increasing jumps
-jump_anticipation = 5 # for jump-bounces
+jump_key_relevance = 8 # for increasing jumps after the fact
+bounce_jump_key_relevance = jump_key_relevance/2 # for bounces
+jump_anticipation = 5 # how many frames prior can you press jump to increase a bounce
 
 crawling_speed = 1.5*S
 running_speed = 4.5*S
@@ -115,6 +116,7 @@ class Player(Body):
             self.shapes.append(i)
         
         self.jump_anticipation = jump_anticipation
+        self.jump_recency = 0
         self.animate = 0
         
         self.shift_path = [np.array([player_size[0]*0.05*math.cos(2.0*i*math.pi/animate_length),player_size[0]*0.1*math.sin(4.0*i*math.pi/animate_length)], dtype ='float' )for i in range(animate_length)]
@@ -223,7 +225,15 @@ class Player(Body):
 ###############################################################################################
     # determine state of character
     # gravity, flopping, jumping, running, sliding, attacking, all in one go
-    def evolve(self,run_key,crouch_key,jump_key,attack_key,flop_key,jump_hold):
+    def evolve(self,keyboard):
+    
+        run_key = keyboard.right_key - keyboard.left_key
+        crouch_key = keyboard.crouch_key
+        jump_key = keyboard.jump_key
+        attack_key = keyboard.attack_key
+        flop_key = keyboard.flop_key
+        jump_hold = keyboard.jump_hold
+    
     
     ######### DIRECTION ###########################################
 
@@ -263,10 +273,16 @@ class Player(Body):
             return
                             
         #jump if on the ground and not attacking or flopping (already dealt with), character CAN jump out of slide
-        if jump_key and not (is_airborne or is_attacking): # and not flopping 
-            self.jump()
-            return # this is the only action
-           
+        if jump_key and not is_attacking:
+            self.jump_recency = self.jump_anticipation # key press can determine bounce if mid-air
+            if not is_airborne: # can't jump mid air though.
+                self.jump()
+                return # jumping is the only action
+        
+        elif self.jump_recency>0: # count down from last jump key press
+            self.jump_recency -=1
+            
+            
         if self.sliding>0:     # only action during slides is jumping (already dealt with).          
             self.sliding-=1  
             return # this is the ony action
@@ -354,12 +370,12 @@ class Player(Body):
 
 ####### external use, not used in evolve() #####
 
-    def bounce(self,jump_timer,side):
+    def bounce(self,side):
         if self.vel[1] != crouch_release_vel: # if not just released from a crouch (this causes squeezing)
-            if jump_timer>0 and side == -1:
-                self.jumping = int(jump_key_relevance/2)
+            if self.jump_recency>0 and side == -1:
+                self.jumping = bounce_jump_key_relevance
                 self.vel[1] = side*bounce_strength 
-                ## ADD CROUCH STRENGTH WHEN JUMPING ON SPRING BLOCK. DO JUST REGULAR JUMP WHEN BOUNCING ON SPRING BLOCK
+                ## ADD STRENGTH WHEN JUMPING ON SPRING BLOCK. DO JUST REGULAR JUMP WHEN BOUNCING ON SPRING BLOCK
             else:
                 if side == 1:
                     self.vel[1] = min(bounce_strength,-self.vel[1]) # do not bounce down harder than collision was

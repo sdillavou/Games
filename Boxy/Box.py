@@ -163,7 +163,7 @@ class Wood(Box):
                 player.current_status.counters['boxes'] += 1
                 
             if bounce: 
-                player.bounce(jump_timer*jump_hold,side) # first input is jump was recently pressed and still held
+                player.bounce(side) # bounce up or down
                 if not break_box:
                     if isinstance(self,Bouncey_Wood):
                         player.current_status.counters['fruit'] += 1
