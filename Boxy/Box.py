@@ -1,4 +1,4 @@
-import pygame, copy, numpy as np
+import copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
 from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color
@@ -78,6 +78,7 @@ class Box(Body):
         self.floating = False
         self.fruit = 0
         
+    # Boxes are subject to gravity if not designated as floating and not resting on an object and also are solid/corporeal
     def move(self):
         if not self.floating and not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
             self.vel[1] += G

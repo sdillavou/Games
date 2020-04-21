@@ -1,9 +1,8 @@
 import numpy as np  # pygame, copy,
 #from random import randint
 from Super_Classes import Body, Shape, Vector
-import Box
 import math
-import copy
+import copy # remove this when you get a chance, it's inefficient
 from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color
 
 from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound
@@ -265,11 +264,10 @@ class Player(Body):
         
     ######### EVOLVE COUNTERS AND JUMP ############################
         
-        if self.flopping>0:    # if flopping, that's all that's going on
+        # if flopping, that's all that's going on
+        if self.flopping>0:    
             if not is_airborne:
-                if self.flopping == self.flop_stun: #thud when hitting the ground
-                    thud_sound()
-                self.flopping -=1 # wait out stun
+                self.flopping -=1 # stun time decreases
             return
                             
         #jump if on the ground and not attacking or flopping (already dealt with), character CAN jump out of slide
@@ -282,12 +280,13 @@ class Player(Body):
         elif self.jump_recency>0: # count down from last jump key press
             self.jump_recency -=1
             
-            
-        if self.sliding>0:     # only action during slides is jumping (already dealt with).          
+        # only action during slides is jumping (already dealt with).     
+        if self.sliding>0:              
             self.sliding-=1  
-            return # this is the ony action
+            return # this is the only action
         
-        if is_attacking:   # attacking doesn't stop movement control, so, onward!
+        # attacking doesn't stop movement control, so, onward!
+        if is_attacking:   
             self.attacking -= 1  
         elif attack_key:
             self.attacking = attack_duration
@@ -402,6 +401,8 @@ class Protector(Body):
         self.shapes[-1].shift(self.size*[0.3,-0.3]) # eye facing one way
         self.shapes.append(Shape(self.self_shape([0.1,0.1]),eye_color,None,line_width = 2)) # add visible shape
         self.shapes[-1].shift(self.size*[-0.3,-0.3]) # eye facing the other way
+    
+    # slightly more efficient move method than Body.move(), as there is never anything resting on it.
     def move(self):
         Vector.move(self)
         

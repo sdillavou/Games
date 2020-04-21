@@ -7,6 +7,7 @@ from random import randint
 import Box, Platform
 from Gettables import Fruit
 from Constants import box_size, S, floor
+from Make_Sounds import thud_sound
 
 white = (255,255,255)
 background_speed = 7.0/8.0
@@ -99,22 +100,23 @@ class Level:
             self.player_start = [0.0,0.0]
             
         
-        
+    # Reset the level by copying master lists and clearing the foreground, then letting objects settle   
     def reset(self):
         
+        # set all appropriate lists
         self.platform_list = copy.deepcopy(self.master_platform_list)
         self.box_list = copy.deepcopy(self.master_box_list)
         self.gettable_list = copy.deepcopy(self.master_gettable_list)
         self.foreground_list = []
-             
-        self.move_objects()
-        
         self.big_list = [self.background_list, self.platform_list, self.box_list, self.gettable_list, self.foreground_list]
-    
-        
 
-    def move_objects(self,land_sound=lambda:None):
-    
+        # let objects find what they're resting on
+        self.move_objects(land_sound=lambda:None) # silently let things find their place before the curtain rises
+        
+        
+    # Move all objects in level (everything but player and protector). Falling solid bodies can find new resting spots. 
+    def move_objects(self,land_sound=thud_sound):
+
      ## link all boxes to platforms they are standing on
         for bod in self.box_list:
             bod.move() # boxes not floating and not resting on will accelerate down
@@ -122,43 +124,51 @@ class Level:
                 for bod2 in self.platform_list+self.box_list:
                     if Box.resolve_fall(bod,bod2):
                         if not isinstance(bod2,Box.Box) or bod2.vel[1] == 0:
-                            land_sound()
+                            land_sound() # play hitting ground sound, or alternate sound (or nothing) from input
                             bod.vel[1] = 0
                             break
                             
-        for bod in self.platform_list:
+        for bod in self.platform_list: # platforms do not fall, they float.
             bod.move()
             
-    # draw sceneary, all bodies and player (not status)      
+    
+    # draw scenery, all bodies, player, and status. Also remove destroyed objects, and shift destroying objects to front
     def draw_level(self,gameDisplay,screen,character):
           
-        
-        for bod in self.scenery:
-            if abs((screen.pos[0]-bod.pos[0])*(1.0-background_speed))<(screen.size[0]+bod.size[0]):
-                bod.draw(gameDisplay,screen.pos - [(character.pos[0]-bod.pos[0])*background_speed,0])
-
-                
-        # Shake all non-scenery objects after a flop hits the ground
-        if self.ticker == -1 and character.flopping == (character.flop_stun-1):
-            self.ticker = len(self.shifts) -1   
-        elif self.ticker>=0:
-            self.ticker -=1
-            
-        # draw all non-scenery objects!
-        for small_list in self.big_list[:1]+[[character]]+self.big_list[1:]:
-            for bod in small_list:
-                if self.ticker>=0:
-                    bod.visual_shift(self.shifts[self.ticker])
-                if screen.overlap(bod):
-                    bod.draw(gameDisplay,screen.pos)
-                if self.ticker>=0:
-                    bod.visual_shift(-self.shifts[self.ticker])
-        
-        # draw counters and icons at top
-        character.current_status.draw(gameDisplay)
-        
         # remove unnecessary destroyed objects
         for bod in self.foreground_list[::-1]:
             if bod.destruct_counter==0: #completely destroyed!
                 self.foreground_list.remove(bod)
     
+        # move all non-corporeal objects to the foreground
+        for body_list in [self.box_list, self.gettable_list]:
+            for bod in body_list[::-1]: # need to go in reverse else removal of two objects doesn't work
+                if not bod.corporeal:
+                    body_list.remove(bod)
+                    self.foreground_list.append(bod)
+
+        # draw scenery (special rules for when they overlap with screen)
+        for bod in self.scenery:
+            if abs((screen.pos[0]-bod.pos[0])*(1.0-background_speed))<(screen.size[0]+bod.size[0]):
+                bod.draw(gameDisplay,screen.pos - [(character.pos[0]-bod.pos[0])*background_speed,0])
+         
+        # If flop just hit the ground, reset the ticker, if currently shaking, advance the ticker.
+        if self.ticker == -1 and character.flopping == (character.flop_stun-1):
+            self.ticker = len(self.shifts) -1   
+        elif self.ticker>=0:
+            self.ticker -=1
+            
+        # draw all non-scenery objects
+        for small_list in self.big_list[:1]+[[character]]+self.big_list[1:]:
+            for bod in small_list:
+                if self.ticker>=0: # shakes from flop hit
+                    bod.visual_shift(self.shifts[self.ticker])
+                if screen.overlap(bod):
+                    bod.draw(gameDisplay,screen.pos)
+                if self.ticker>=0: # undo shift from flop hit
+                    bod.visual_shift(-self.shifts[self.ticker])
+        
+        # draw counters and icons at top of display
+        character.current_status.draw(gameDisplay)
+        
+      
