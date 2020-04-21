@@ -103,7 +103,7 @@ class Level:
              
         self.move_objects()
 
-    def move_objects(self,sound=lambda:None):
+    def move_objects(self,land_sound=lambda:None):
     
      ## link all boxes to platforms they are standing on
         for bod in self.box_list:
@@ -112,7 +112,7 @@ class Level:
                 for bod2 in self.platform_list+self.box_list:
                     if Box.resolve_fall(bod,bod2):
                         if not isinstance(bod2,Box.Box) or bod2.vel[1] == 0:
-                            sound()
+                            land_sound()
                             bod.vel[1] = 0
                             break
                             
