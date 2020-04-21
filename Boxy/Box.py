@@ -127,7 +127,7 @@ class Wood(Box):
         wood_break_sound()
         
     def interact(self,player):
-        jump_timer,jump_hold = 0,0
+        jump_timer = 0
         
         # if box is attacked in any way it breaks and doesn't impede player
         if self.overlap(player.hit_box()):
@@ -151,7 +151,7 @@ class Wood(Box):
             # edge cases where box must break when hit from below (dim == 1 already if bounce)
             if bounce and side == 1:
                 # player on a solid object and hitting underside or pressed jump this round (effectively a squeeze)
-                if isinstance(player.resting_on,Body) or (jump_timer == player.jump_anticipation and player.jumping > 0):
+                if isinstance(player.resting_on,Body) or ((player.jump_recency == player.jump_anticipation) and (player.jumping > 0)):
                     break_box = True
                     bounce = False # no need to bounce
      
