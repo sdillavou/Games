@@ -9,13 +9,19 @@ from Gettables import Fruit
 from Constants import box_size, S, floor
 
 white = (255,255,255)
+background_speed = 7.0/8.0
+
 
 
 class Level:
     
-    
+    # small shifts used to shake the screen
+    shifts = [np.array([randint(-10,10)/5,randint(-10,10)/5]) for _ in range(5)]
+
     def __init__(self,num=0):
 
+        self.ticker = -1
+        
         if num == 0:
 
             self.scenery = []
@@ -92,8 +98,9 @@ class Level:
             self.foreground_list = [] 
             self.master_gettable_list = []
             self.player_start = [0.0,0.0]
-
-    
+            
+        
+        
     def reset(self):
         
         self.platform_list = copy.deepcopy(self.master_platform_list)
@@ -102,6 +109,10 @@ class Level:
         self.foreground_list = []
              
         self.move_objects()
+        
+        self.big_list = [self.background_list, self.platform_list, self.box_list, self.gettable_list, self.foreground_list]
+    
+        
 
     def move_objects(self,land_sound=lambda:None):
     
@@ -118,3 +129,37 @@ class Level:
                             
         for bod in self.platform_list:
             bod.move()
+            
+    # draw sceneary, all bodies and player (not status)      
+    def draw_level(self,gameDisplay,screen,character):
+          
+        
+        for bod in self.scenery:
+            if abs((screen.pos[0]-bod.pos[0])*(1.0-background_speed))<(screen.size[0]+bod.size[0]):
+                bod.draw(gameDisplay,screen.pos - [(character.pos[0]-bod.pos[0])*background_speed,0])
+
+                
+        # Shake all non-scenery objects after a flop hits the ground
+        if self.ticker == -1 and character.flopping == (character.flop_stun-1):
+            self.ticker = len(level.shifts) -1   
+        elif self.ticker>=0:
+            self.ticker -=1
+            
+        # draw all non-scenery objects!
+        for small_list in self.big_list[:1]+[[character]]+self.big_list[1:]:
+            for bod in small_list:
+                if ticker>=0:
+                    bod.visual_shift(self.shifts[ticker])
+                if screen.overlap(bod):
+                    bod.draw(gameDisplay,screen.pos)
+                if ticker>=0:
+                    bod.visual_shift(-self.shifts[ticker])
+        
+        # draw counters and icons at top
+        character.current_status.draw(gameDisplay)
+        
+        # remove unnecessary destroyed objects
+        for bod in self.foreground_list[::-1]:
+            if bod.destruct_counter==0: #completely destroyed!
+                self.foreground_list.remove(bod)
+    
