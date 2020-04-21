@@ -80,7 +80,6 @@ class Level:
             for i in [0,3.0]:
                 self.master_box_list.append(Box.Bouncey_Wood(a.pos + [600*S+box_size*2*6,-(i+1)*2*box_size]))
                 self.master_box_list[-1].floating = True  
-            ticker = -1
 
             self.master_gettable_list = []
 
@@ -141,19 +140,19 @@ class Level:
                 
         # Shake all non-scenery objects after a flop hits the ground
         if self.ticker == -1 and character.flopping == (character.flop_stun-1):
-            self.ticker = len(level.shifts) -1   
+            self.ticker = len(self.shifts) -1   
         elif self.ticker>=0:
             self.ticker -=1
             
         # draw all non-scenery objects!
         for small_list in self.big_list[:1]+[[character]]+self.big_list[1:]:
             for bod in small_list:
-                if ticker>=0:
-                    bod.visual_shift(self.shifts[ticker])
+                if self.ticker>=0:
+                    bod.visual_shift(self.shifts[self.ticker])
                 if screen.overlap(bod):
                     bod.draw(gameDisplay,screen.pos)
-                if ticker>=0:
-                    bod.visual_shift(-self.shifts[ticker])
+                if self.ticker>=0:
+                    bod.visual_shift(-self.shifts[self.ticker])
         
         # draw counters and icons at top
         character.current_status.draw(gameDisplay)
