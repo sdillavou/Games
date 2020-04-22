@@ -61,7 +61,7 @@ class Level:
             a00 = Box.Tnt(a0.pos - [box_size*2,0])
             
             
-            a001 = Box.Tnt(a0.pos - [box_size*2,box_size*8])
+            a001 = Box.Tnt(a0.pos - [box_size*2,box_size*6])
             a001.floating = True
 
 

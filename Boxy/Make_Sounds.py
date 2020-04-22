@@ -19,9 +19,11 @@ protection = pygame.mixer.Sound('sounds/protection.wav')
 slide = pygame.mixer.Sound('sounds/slide.wav')
 slide.set_volume(0.15)
 
+tnt_sound = pygame.mixer.Sound('sounds/tnt_sound2.wav')
+tnt_sound.set_volume(0.5)
+
 blip = pygame.mixer.Sound('sounds/blip.wav')
 blip.set_volume(0.7)
-
 
 ouch = pygame.mixer.Sound('sounds/ouch.wav')
 ouch.set_volume(0.7)
@@ -65,5 +67,5 @@ def power_down_sound():
     pygame.mixer.Sound.play(power_down)
     
 def countdown_sound():
-    pygame.mixer.Sound.play(blip)
+    pygame.mixer.Sound.play(tnt_sound)
     
