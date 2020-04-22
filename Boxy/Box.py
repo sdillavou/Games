@@ -155,7 +155,7 @@ class Wood(Bounce_Box):
         if self.destruct_counter == self.destruct_length: # remove box
             self.shapes[0].color = None
             self.shapes[0].line_color = None
-        Body.draw(self,canvas,zero,scale=break_scale)
+        return Body.draw(self,canvas,zero,scale=break_scale)
         
     def destroy(self):
         Body.destroy(self)
@@ -201,7 +201,7 @@ class Metal_Wood(Box):
         if self.destruct_counter == self.destruct_length: # remove box
             self.shapes[0].color = None
             self.shapes[0].line_color = None
-        super().draw(canvas,zero,scale=break_scale)
+        return super().draw(canvas,zero,scale=break_scale)
     
     # interactions are standard solid unmoving UNLESS player is flopping
     def interact(self,player):
@@ -247,7 +247,7 @@ class Nitro(Box):
             self.visual_recursive_shift([0,-self.temporary_shift[1]])
             self.temporary_shift = [0,0]
         
-        super().draw(canvas,zero,scale = explode_scale)
+        return super().draw(canvas,zero,scale = explode_scale)
     
     def destroy(self):
         Body.destroy(self)
@@ -280,11 +280,13 @@ class Tnt(Box):
         light_up = (randint(0,120) < 1) and self.cooldown == 0
         if light_up:
             self.shapes[0].color = tnt_light_color
-        super().draw(canvas,zero,scale=explode_scale)
+        out = super().draw(canvas,zero,scale=explode_scale)
         if light_up:
             self.shapes[0].color = tnt_color
             self.cooldown = 60
      
+        return out
+    
     def destroy(self):
         Body.destroy(self)
         boom_sound()   

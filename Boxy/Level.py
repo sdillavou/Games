@@ -20,7 +20,8 @@ class Level:
     shifts = [np.array([randint(-10,10)/5,randint(-10,10)/5]) for _ in range(5)]
 
     def __init__(self,num=0):
-
+        self.new_rects = []
+        self.old_rects = []
         self.ticker = -1
         
         if num == 0:
@@ -134,7 +135,11 @@ class Level:
     
     # draw scenery, all bodies, player, and status. Also remove destroyed objects, and shift destroying objects to front
     def draw_level(self,gameDisplay,screen,character):
-          
+        
+        # new list of new rectangles to update  
+        self.old_rects = self.new_rects[:]
+        self.new_rects = []
+        
         # remove unnecessary destroyed objects
         for bod in self.foreground_list[::-1]:
             if bod.destruct_counter==0: #completely destroyed!
@@ -150,11 +155,12 @@ class Level:
         # draw scenery (special rules for when they overlap with screen)
         for bod in self.scenery:
             if abs((screen.pos[0]-bod.pos[0])*(1.0-background_speed))<(screen.size[0]+bod.size[0]):
-                bod.draw(gameDisplay,screen.pos - [(character.pos[0]-bod.pos[0])*background_speed,0])
+                self.new_rects += bod.draw(gameDisplay,screen.pos - [(character.pos[0]-bod.pos[0])*background_speed,0])
          
         # If flop just hit the ground, reset the ticker, if currently shaking, advance the ticker.
         if self.ticker == -1 and character.flopping == (character.flop_stun-1):
-            self.ticker = len(self.shifts) -1   
+            self.ticker = len(self.shifts) -1  
+            thud_sound()
         elif self.ticker>=0:
             self.ticker -=1
             
@@ -164,11 +170,13 @@ class Level:
                 if self.ticker>=0: # shakes from flop hit
                     bod.visual_shift(self.shifts[self.ticker])
                 if screen.overlap(bod):
-                    bod.draw(gameDisplay,screen.pos)
+                    self.new_rects += bod.draw(gameDisplay,screen.pos)[0:1]
                 if self.ticker>=0: # undo shift from flop hit
                     bod.visual_shift(-self.shifts[self.ticker])
         
         # draw counters and icons at top of display
-        character.current_status.draw(gameDisplay)
+        self.new_rects += character.current_status.draw(gameDisplay)
+        
+        return self.old_rects+self.new_rects
         
       
