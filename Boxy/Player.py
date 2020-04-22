@@ -179,32 +179,30 @@ class Player(Body):
         self.animate += 1 + 3*(self.vel[0] !=0)
         self.animate %= len(self.shift_path)
         
-        rects = []
         
         if not (self.invulnerable and (self.animate % 5) == 0): # don't draw player every 5 frames when invulnerable
         
 
             body_shift = self.pos-zero
-            rects.append(self.shape_dict['legs'].draw(canvas,self.pos-(zero),self.transform))
+            self.shape_dict['legs'].draw(canvas,self.pos-(zero),self.transform)
             hand_shift = 0.0
             eye_shift = self.direction*self.size*[0.5,0.0]
             hand_trans = copy.deepcopy(self.transform)
 
 
             if isinstance(self.hit_box(),Body): # draw relevant hit box
-                for r in self.hit_box().draw(canvas,zero):
-                    rects.append(r)
+                self.hit_box().draw(canvas,zero)
 
             if self.crouching: # includes sliding and flopping
-                rects.append(self.shape_dict['crouch_body'].draw(canvas,self.pos-(zero),self.transform))
+                self.shape_dict['crouch_body'].draw(canvas,self.pos-(zero),self.transform)
 
                 if self.flopping>0:
                     for k in [-1.0, 1.0]:
-                        rects.append(self.shape_dict['hand'].draw(canvas,body_shift+[k*self.size[0]*0.8,0]))
-                        rects.append(self.shape_dict['eye'].draw(canvas,body_shift+k*eye_shift+[0,self.size[0]*0.1],self.transform*[3.0,1.0]))
+                        self.shape_dict['hand'].draw(canvas,body_shift+[k*self.size[0]*0.8,0])
+                        self.shape_dict['eye'].draw(canvas,body_shift+k*eye_shift+[0,self.size[0]*0.1],self.transform*[3.0,1.0])
                 else:
-                    rects.append(self.shape_dict['hand'].draw(canvas,body_shift+hand_shift, np.matmul(self.transform,self.direction*rot90mat)))
-                    rects.append(self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform))
+                    self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,np.matmul(self.transform,self.direction*rot90mat))
+                    self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
 
             else: # if not crouched
 
@@ -213,17 +211,15 @@ class Player(Body):
                     hand_shift = -self.direction*self.shift_path[self.animate]*[4.0,0.5]
                 else:
                     hand_trans[1,1] *= -1
-                rects.append(self.shape_dict['body'].draw(canvas,body_shift,self.transform))
-                rects.append(self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,hand_trans))
-                rects.append(self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform))
+                self.shape_dict['body'].draw(canvas,body_shift,self.transform)
+                self.shape_dict['hand'].draw(canvas,body_shift+hand_shift,hand_trans)
+                self.shape_dict['eye'].draw(canvas,body_shift+eye_shift,self.transform)
         
         
         if self.protection>0: # if protector is active, modify its velocity 
             
             self.protector.shapes[0].visible = self.protection == 2 #outermost outline only if double protector    
-            rects += self.protector.draw(canvas,zero,self.direction)
-            
-        return rects
+            self.protector.draw(canvas,zero,self.direction)
         
 ###############################################################################################
     # determine state of character
@@ -413,4 +409,4 @@ class Protector(Body):
     def draw(self,canvas,zero,direction):
         self.shapes[-1].visible = direction == -1
         self.shapes[-2].visible = direction == 1
-        return Body.draw(self,canvas,zero)
+        Body.draw(self,canvas,zero)

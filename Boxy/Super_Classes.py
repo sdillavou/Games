@@ -100,15 +100,11 @@ class Body(Vector):
         if self.destruct_counter > 0:
             self.destruct_counter -=1
             self.transform *= scale
-            
-        rects = []
-        if self.destruct_counter !=0: # if destruct counter = 0, no go
+        
+        if self.destruct_counter !=0:     
             for s in self.shapes:
-                rects.append(s.draw(canvas,self.pos-zero,self.transform))
-                
-        return rects #return relevant rectangles
-        
-        
+                s.draw(canvas,self.pos-zero,self.transform)
+        # if destruct counter = 0, no go
    
     # Move and rotate this object
     def move(self):
@@ -200,19 +196,14 @@ class Shape:
         self.visible = visible
         self.z = z
         
-    def draw(self,canvas,position,transform=identitymat): # draw if visible, transform if indicated, shift position            
+    def draw(self,canvas,position,transform=identitymat): # draw if visible, transform if indicated, shift position
         if self.visible:
             draw_nodes = [tuple(np.matmul(transform,n)+position) for n in self.nodes] # position and transform nodes
-            
             if not self.color is None: # if filled
-                rect = pygame.draw.polygon(canvas, self.color, draw_nodes+draw_nodes[0:1])
+                pygame.draw.polygon(canvas, self.color, draw_nodes+draw_nodes[0:1])
             if not self.line_color is None: # if outlined
                # aalines(surface, color, closed, points)
-                rect = pygame.draw.aalines(canvas, self.line_color, True, draw_nodes, self.line_width) # line width is now blend
-            
-            if not ((self.color is None) and (self.line_color is None)):
-                return rect
-        
+                pygame.draw.aalines(canvas, self.line_color, True, draw_nodes, self.line_width) # line width is now blend
 
     def transform(self,transform): # transform nodes (permanently) with matrix
         self.nodes = [tuple(np.matmul(transform,n)) for n in self.nodes] 

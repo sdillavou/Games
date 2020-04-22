@@ -45,9 +45,6 @@ class Status():
 ###############################################################################################        
     # draw the status to the top of the screen, and turn fruit into lives if necessary
     def draw(self,gameDisplay):
-        
-        rects = []
-        
         if self.counters['fruit'] > 99:
             self.counters['fruit'] -= 100
             self.counters['lives'] += 1
@@ -58,14 +55,10 @@ class Status():
             textRect = text.get_rect()  
             textRect.center = (icon_spacing*k + display_height*2 + textRect[2]/2,display_height+icon_size*0.15) 
             gameDisplay.blit(text, textRect) 
-            rects.append(textRect)
 
         text2 = font2.render('Z: Attack    X: Jump    C: Crouch/Slide/Flop', True, gray, None)
         textRect2 = text2.get_rect()  
         textRect2.center = (display_size[0]- textRect2[2]/2-icon_size,display_height+icon_size*0.1) 
         gameDisplay.blit(text2, textRect2) 
-        rects.append(textRect2)
-
-        return rects
       
        
