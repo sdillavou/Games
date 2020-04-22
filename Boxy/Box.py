@@ -74,11 +74,9 @@ class Box(Body):
     def __init__(self,position,color,line_color = (0,0,0),line_width = 2):   
         Body.__init__(self,position,self.size,True,True,[0,0]) 
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
-        self.destruct_counter = -1 #indestructable is default
+        self.destruct_counter = -1
         self.floating = False
         self.fruit = 0
-        self.bounces = -1
-        
         
     # Boxes are subject to gravity if not designated as floating and not resting on an object and also are solid/corporeal
     def move(self):
@@ -89,42 +87,10 @@ class Box(Body):
     # box is destructable if it has a positive destruct length
     def is_destructable(self):
         return destruct_length>0
-    
-    
-# Class to handle destructable boxes than can bounce player 
-class Bounce_Box(Box):
-    
-     def break_or_bounce(self,player):
-
-        dim,side,converging = Body.interact(self,player) # solid interactions
-        
-        if dim == 1: # self and player collide vertically
-            
-            bounce = converging # must be converging to bounce
-            if bounce and self.bounces>0:
-                self.bounces -=1
-            
-            # box breaks if last allowable bounce or it is falling
-            break_box = (bounce and (self.bounces == 0 or self.vel[1]>0)) 
-            
-            # edge cases where box must break when hit from below
-            if bounce and side == 1:
-                # player on a solid object and hitting underside or pressed jump this round (effectively a squeeze)
-                if isinstance(player.resting_on,Body) or ((player.jump_recency == player.jump_anticipation) and (player.jumping > 0)):
-                    break_box = True
-                    bounce = False # no need to bounce
-     
-            return break_box, bounce*side # return side if bouncing
-        
-        else: # not colliding vertically, no break or bounce
-            return False, False
-    
-
-        
         
 # Class for metal boxes
 class Metal(Box):
-
+    destruct_time = -1 
     # Initialize metal box
     def __init__(self,position):
         Box.__init__(self,position,metal_color)
@@ -137,7 +103,7 @@ class Metal(Box):
                 self.shapes.append(shp2) # add corner dots
 
 # Class for wooden boxes
-class Wood(Bounce_Box):
+class Wood(Box):
         
     # Initialize wood box
     def __init__(self,position):
@@ -162,6 +128,7 @@ class Wood(Bounce_Box):
         wood_break_sound()
         
     def interact(self,player):
+        jump_timer = 0
         
         # if box is attacked in any way it breaks and doesn't impede player
         if self.overlap(player.hit_box()):
@@ -170,19 +137,38 @@ class Wood(Bounce_Box):
             player.current_status.counters['boxes'] += 1
             return
         
-        break_box, bounce = self.break_or_bounce(player) # inherited from Bounce_Box
-       
-        if break_box:
-            self.destroy()
-            player.current_status.counters['fruit'] += self.fruit
-            player.current_status.counters['boxes'] += 1
+        dim,side,converging = Body.interact(self,player) # solid interactions
+        
+        if dim > -1: # self and player overlap
+            
+            # will player bounce
+            bounce = (dim == 1) and converging
+            if bounce:
+                self.bounces -=1
+            
+            #will box break
+            break_box = (bounce and (self.bounces == 0 or self.vel[1]>0)) # falling bouncy boxes break
+            
+            # edge cases where box must break when hit from below (dim == 1 already if bounce)
+            if bounce and side == 1:
+                # player on a solid object and hitting underside or pressed jump this round (effectively a squeeze)
+                if isinstance(player.resting_on,Body) or ((player.jump_recency == player.jump_anticipation) and (player.jumping > 0)):
+                    break_box = True
+                    bounce = False # no need to bounce
+     
 
-        if bounce!=0: 
-            player.bounce(bounce) # bounce up or down
-            if not break_box:
-                if isinstance(self,Bouncey_Wood):
-                    player.current_status.counters['fruit'] += 1
-                    wood_bounce_sound()
+            if break_box:
+                wood_break_sound()
+                self.destroy()
+                player.current_status.counters['fruit'] += self.fruit
+                player.current_status.counters['boxes'] += 1
+                
+            if bounce: 
+                player.bounce(side) # bounce up or down
+                if not break_box:
+                    if isinstance(self,Bouncey_Wood):
+                        player.current_status.counters['fruit'] += 1
+                        wood_bounce_sound()
 
         
 
