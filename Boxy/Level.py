@@ -155,6 +155,7 @@ class Level:
         # If flop just hit the ground, reset the ticker, if currently shaking, advance the ticker.
         if self.ticker == -1 and character.flopping == (character.flop_stun-1):
             self.ticker = len(self.shifts) -1   
+            thud_sound()
         elif self.ticker>=0:
             self.ticker -=1
             
