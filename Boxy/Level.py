@@ -1,3 +1,5 @@
+import pygame
+
 # Standard modules
 import numpy as np
 import math, copy, numpy as np
@@ -134,7 +136,11 @@ class Level:
             
     
     # draw scenery, all bodies, player, and status. Also remove destroyed objects, and shift destroying objects to front
-    def draw_level(self,gameDisplay,screen,character):
+    def draw_level(self,gameDisplay,screen,character,sky):
+        
+        # draw over old rects
+        for r in filter(None,self.old_rects):
+            pygame.draw.rect(gameDisplay, sky, r)
         
         # new list of new rectangles to update  
         self.old_rects = self.new_rects[:]
@@ -170,7 +176,7 @@ class Level:
                 if self.ticker>=0: # shakes from flop hit
                     bod.visual_shift(self.shifts[self.ticker])
                 if screen.overlap(bod):
-                    self.new_rects += bod.draw(gameDisplay,screen.pos)[0:1]
+                    self.new_rects += bod.draw(gameDisplay,screen.pos)
                 if self.ticker>=0: # undo shift from flop hit
                     bod.visual_shift(-self.shifts[self.ticker])
         
