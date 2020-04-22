@@ -56,10 +56,17 @@ class Level:
             
             a0 = Box.Protection(a2.pos - [box_size*2,0])
             a01 = Box.Protection(a0.pos - [0,box_size*2])
+            
+            
+            a00 = Box.Tnt(a0.pos - [box_size*2,0])
+            
+            
+            a001 = Box.Tnt(a0.pos - [box_size*2,box_size*8])
+            a001.floating = True
 
 
             self.master_platform_list = [p1,p2,d1,d2]
-            self.master_box_list = [a0,a01,a,a1,a2,a3,b2,b3,b4]
+            self.master_box_list = [a001,a00,a0,a01,a,a1,a2,a3,b2,b3,b4]
             self.background_list = [p0]
 
 
@@ -78,13 +85,18 @@ class Level:
                         self.master_box_list.append(Box.Metal_Wood(a.pos + [600*S+box_size*2*k,-i*2*box_size]))
                     else:
                         self.master_box_list.append(Box.Wood(a.pos + [600*S+box_size*2*k,-i*2*box_size]))
+                        
+            self.master_box_list.append(Box.Tnt(a.pos + [600*S,-3*2*box_size]))
+
+                        
+                        
             for i in [0,3.0]:
                 self.master_box_list.append(Box.Bouncey_Wood(a.pos + [600*S+box_size*2*6,-(i+1)*2*box_size]))
                 self.master_box_list[-1].floating = True  
 
             self.master_gettable_list = []
 
-            for k in range(10):
+            for k in range(1,10):
                 self.master_gettable_list.append(Fruit(a.pos + [600*S+box_size*2*k,-3*2*box_size]))
 
          
@@ -111,12 +123,13 @@ class Level:
         self.big_list = [self.background_list, self.platform_list, self.box_list, self.gettable_list, self.foreground_list]
 
         # let objects find what they're resting on
-        self.move_objects(land_sound=lambda:None) # silently let things find their place before the curtain rises
+        self.move_objects(land_sound_flag=False) # silently let things find their place before the curtain rises
         
         
     # Move all objects in level (everything but player and protector). Falling solid bodies can find new resting spots. 
-    def move_objects(self,land_sound=thud_sound):
+    def move_objects(self,land_sound_flag=True):
 
+            
      ## link all boxes to platforms they are standing on
         for bod in self.box_list:
             bod.move() # boxes not floating and not resting on will accelerate down
@@ -124,8 +137,17 @@ class Level:
                 for bod2 in self.platform_list+self.box_list:
                     if Box.resolve_fall(bod,bod2):
                         if not isinstance(bod2,Box.Box) or bod2.vel[1] == 0:
-                            land_sound() # play hitting ground sound, or alternate sound (or nothing) from input
+                            if land_sound_flag:
+                                thud_sound() # play hitting ground sound, or alternate sound (or nothing) from input
+                                
+                                # tnt boxes start timers if hitting the ground or getting hit (not on reset though)
+                                for b in bod2.recursive_dependent_list():  
+                                    if isinstance(b,Box.Tnt):
+                                        if b.countdown == -1:
+                                            b.start_countdown()
+                                    
                             bod.vel[1] = 0
+                            
                             break
                             
         for bod in self.platform_list: # platforms do not fall, they float.

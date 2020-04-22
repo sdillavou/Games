@@ -20,7 +20,7 @@ slide = pygame.mixer.Sound('sounds/slide.wav')
 slide.set_volume(0.15)
 
 blip = pygame.mixer.Sound('sounds/blip.wav')
-blip.set_volume(0.15)
+blip.set_volume(0.7)
 
 
 ouch = pygame.mixer.Sound('sounds/ouch.wav')
@@ -63,4 +63,7 @@ def ouch_sound():
     
 def power_down_sound():
     pygame.mixer.Sound.play(power_down)
+    
+def countdown_sound():
+    pygame.mixer.Sound.play(blip)
     

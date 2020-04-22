@@ -56,14 +56,16 @@ class Body(Vector):
  #       self.transform[1,:] *= -1
  #   def fliplr(self): # flips body left and right (from its current state)
  #       self.transform[0,:] *= -1
- #   def scale(self,multiple): # scales body by multiple (or x and y if multiple is length 2)
- #       if len(multiple) == 1:
- #           self.transform *= multiple
- #       elif len(multiple) == 2:
- #           for i in range(2):
- #               self.transform[i,:] *= multiple[i]
- #       else:
- #           raise NameError('multiple is incorrect length')
+    
+    def scale(self,multiple): # scales body by multiple (or x and y if multiple is length 2)
+        if isinstance(multiple,float) or isinstance(multiple,int):
+            self.transform *= multiple
+        elif len(multiple) == 2:
+            for i in range(2):
+                self.transform[i,:] *= multiple[i]
+        else:
+            raise NameError('multiple is incorrect length')
+            
  #   def return_to_size(self): # returns to original scale
  #       self.transform /= np.linalg.det(self.transform)
  #   def return_to_upright(self): # returns to original orientation
@@ -127,6 +129,14 @@ class Body(Vector):
             
         for obj in self.on_me:
             obj.visual_recursive_shift(vel)
+            
+    # recursively finds all objects resting on this one, and resting on those, etc. includes self
+    def recursive_dependent_list(self):
+        out = [self]
+        for bod in self.on_me:
+            out += bod.recursive_dependent_list()
+            
+        return out
         
     # returns nodes that give the bounding box around this object
     def self_shape(self,scale = [1.0,1.0]):
@@ -154,7 +164,10 @@ class Body(Vector):
             
 
     # interact with player, self is assumed to be indestructable, non-bouncey, and solid
-    def interact(self,player):       
+    def interact(self,player):    
+        if not self.corporeal:
+            return -1, None, None
+        
         dim,gap = player.overlap_dim(self)
         side,converging = None,None
 
