@@ -1,12 +1,12 @@
 from Gettables import Fruit
 import Box
 import pygame
-from Constants import character_color, display_size
+from Constants import character_color, display_size, S
 
 
 ##### Useful Identities ################################################################
 
-icon_size = 25.0 # does not scale with game
+icon_size = 18*S 
 icon_spacing = 8*icon_size
 display_height = icon_size*1.5
 font = pygame.font.Font('freesansbold.ttf', int(icon_size*1.7))

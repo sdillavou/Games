@@ -236,8 +236,8 @@ class Player(Body):
     
     ######### DIRECTION ###########################################
 
-        if self.vel[0] !=0:
-            self.direction = math.copysign(1.0,self.vel[0])
+        if run_key !=0:
+            self.direction = run_key
 
     ######### INVULNERABILITY and PROTECTOR #######################
 

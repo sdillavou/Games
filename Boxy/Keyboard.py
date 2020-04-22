@@ -24,7 +24,7 @@ class Keyboard:
     
     
     # take event as input, change keys as required
-    def handle_events(self,event_list):
+    def handle_in_game_events(self,event_list):
 
         # these flags only true if pressed in this frame
         self.jump_key = False

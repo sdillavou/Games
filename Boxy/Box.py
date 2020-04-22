@@ -113,7 +113,8 @@ class Bounce_Box(Box):
                 if isinstance(player.resting_on,Body) or ((player.jump_recency == player.jump_anticipation) and (player.jumping > 0)):
                     break_box = True
                     bounce = False # no need to bounce
-     
+                    player.jumping = 0 # no longer jumping, buddy
+                    
             return break_box, bounce*side # return side if bouncing
         
         else: # not colliding vertically, no break or bounce
