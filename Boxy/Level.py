@@ -141,7 +141,7 @@ class Level:
                                 thud_sound() # play hitting ground sound, or alternate sound (or nothing) from input
                                 
                                 # tnt boxes start timers if hitting the ground or getting hit (not on reset though)
-                                for b in bod2.recursive_dependent_list():  
+                                for b in bod.recursive_dependent_list()+[bod2]: # the base box or anything on the falling one 
                                     if isinstance(b,Box.Tnt):
                                         if b.countdown == -1:
                                             b.start_countdown()

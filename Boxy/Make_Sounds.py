@@ -28,6 +28,9 @@ blip.set_volume(0.7)
 ouch = pygame.mixer.Sound('sounds/ouch.wav')
 ouch.set_volume(0.7)
 
+footstep = pygame.mixer.Sound('sounds/footstep.wav')
+footstep.set_volume(0.7)
+
 power_down = pygame.mixer.Sound('sounds/power_down.wav')
 #power_down.set_volume(0.15)
 
@@ -68,4 +71,7 @@ def power_down_sound():
     
 def countdown_sound():
     pygame.mixer.Sound.play(tnt_sound)
+    
+def footstep_sound():
+    pygame.mixer.Sound.play(footstep)
     

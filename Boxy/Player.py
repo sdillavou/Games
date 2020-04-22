@@ -5,7 +5,7 @@ import math
 import copy # remove this when you get a chance, it's inefficient
 from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color
 
-from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound
+from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound, footstep_sound
 
 
 ##### Useful Identities ################################################################
@@ -102,7 +102,7 @@ class Player(Body):
         self.shape_dict={'body':Shape(self.self_shape([0.95,0.9]),character_color,line_color = None,line_width = None)}
         self.shape_dict['body'].shift([0,-self.size[1]*0.1])
         self.shape_dict['legs'] = Shape(self.self_shape([0.9,0.01]),legs_color,line_color = None,line_width = None)
-        self.shape_dict['legs'].shift([0,self.size[1]*.99])
+        self.shape_dict['legs'].shift([0,self.size[1]*.97])
         self.shape_dict['legs'].nodes[-1] = (0,0)
         self.shape_dict['crouch_body'] = Shape(self.self_shape(),character_color,line_color = None,line_width = None)
         self.shape_dict['hand'] = Shape(spikey_box(self.size*[0.2,0.25],spike_sides=[0,0,1,0]),hand_color,line_color = None,line_width = None)
@@ -384,6 +384,11 @@ class Player(Body):
 
             self.is_off() # no longer standing on an object
             self.sliding = 0 # cancels slides 
+        
+    def is_on(self,other):
+        if self.resting_on is None:
+            footstep_sound()
+        super().is_on(other)
         
         
 ##### PROTECTOR CLASS  #################################################################
