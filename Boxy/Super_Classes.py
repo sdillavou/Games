@@ -31,7 +31,8 @@ class Vector:
 # Class of Vectors with 2D size, and transformation. Can be visible, corporeal, and solid, and contains shapes to draw
 class Body(Vector): 
     destruct_length = 10
-                
+    destruct_scale = 0.8
+    
     # Create & initialize any specified variables  
     def __init__(self,position,size,corporeal=True,solid=True,velocity=[0,0]):     
         super().__init__(position,velocity)
@@ -97,20 +98,27 @@ class Body(Vector):
     def sort_shapes(self):
         self.shapes = sorted(self.shapes, key= lambda x: x.z, reverse=False)
         
-    # Draw Body's shapes, subject to position of the body (removed: transformation), (in the order of their .z parameter hopefully)
-    def draw(self,canvas,zero=np.array([0,0]),scale = 0.8):  
-        if self.destruct_counter > 0:
-            self.destruct_counter -=1
-            self.transform *= scale
+    # Draw Body's shapes, subject to position of the body
+    def draw(self,canvas,zero=np.array([0,0])):  
+        
+        self.death_throws()
         
         if self.destruct_counter !=0:     
             for s in self.shapes:
                 s.draw(canvas,self.pos-zero,self.transform)
         # if destruct counter = 0, no go
    
+    # Move destruct counter down if needed.
+    def death_throws(self):
+         if self.destruct_counter > 0:
+            self.destruct_counter -=1
+            self.transform *= self.destruct_scale
+
     # Move and rotate this object
     def move(self):
-        self.recursive_shift(self.vel)     
+        self.recursive_shift(self.vel)   
+        if self.cooldown > 0:
+            self.cooldown -=1  
     
     # recursively shift all objects that are resting on this one
     def recursive_shift(self,vel):

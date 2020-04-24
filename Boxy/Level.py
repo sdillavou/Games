@@ -188,6 +188,9 @@ class Level:
                     bod.visual_shift(self.shifts[self.ticker])
                 if screen.overlap(bod):
                     bod.draw(gameDisplay,[character.pos[0]-display_size[0]/2,0])
+                else: # if object is blowing up/disappearing, continue this count even off screen
+                    bod.death_throws()
+                    
                 if self.ticker>=0: # undo shift from flop hit
                     bod.visual_shift(-self.shifts[self.ticker])
         

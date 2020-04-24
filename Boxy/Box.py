@@ -76,7 +76,7 @@ def resolve_fall(bod,bod2): #resolving fall for non-character objects
 
 class Box(Body): 
     destruct_length = 5
-
+    destruct_scale = break_scale
     size = [box_size,box_size]
     destruct_time = 10
     
@@ -104,7 +104,7 @@ class Box(Body):
         if self.destruct_counter == self.destruct_length: # remove box
             self.shapes[0].color = None
             self.shapes[0].line_color = None
-        Body.draw(self,canvas,zero,scale=break_scale)
+        Body.draw(self,canvas,zero)
 
         
 ########################################################################################
@@ -113,6 +113,7 @@ class Box(Body):
 
 # Class to handle destructable boxes than can bounce player 
 class Bounce_Box(Box):
+     
     
      def break_or_bounce(self,player):
 
@@ -145,7 +146,9 @@ class Bounce_Box(Box):
 class Boom_Box(Box):
     
     player = None # all boom boxes track the player
-    
+    destruct_scale = explode_scale
+
+        
     # What happens when this explosive dies
     def destroy(self):
         self.scale(explosion_size)   # explosion bigger than box
@@ -162,7 +165,7 @@ class Boom_Box(Box):
     
     # Explode!
     def draw(self,canvas,zero):
-        Body.draw(self,canvas,zero,scale = explode_scale)
+        Body.draw(self,canvas,zero)
 
         
 ########################################################################################
@@ -268,10 +271,7 @@ class Nitro(Boom_Box):
         self.temporary_shift = [0,0]
     # Draw nitro, but randomly make it jump for a frame
     def draw(self,canvas,zero=np.array([0,0])): 
-        
-        if self.cooldown != 0:
-            self.cooldown -=1
-        
+
         if self.cooldown == 0:
             jump = (randint(0,100) < 1)
         
@@ -279,7 +279,7 @@ class Nitro(Boom_Box):
                 self.temporary_shift = np.array([randint(-50,50),randint(-50,-20)],dtype='float')/20
                 self.visual_shift([self.temporary_shift[0],0])
                 self.visual_recursive_shift([0,self.temporary_shift[1]])
-                self.cooldown -=1
+                self.cooldown = -1
 
         elif self.cooldown <=-1 :
             self.cooldown = 30
@@ -335,9 +335,7 @@ class Tnt(Bounce_Box,Boom_Box):
             s.visible = False
     
     # Draw Tnt, but randomly make it brighter for a frame
-    def draw(self,canvas,zero=np.array([0,0])):   
-        if self.cooldown > 0:
-            self.cooldown -=1    
+    def draw(self,canvas,zero=np.array([0,0])):     
        
         light_up = self.countdown!=-1 or ((randint(0,120) < 1) and self.cooldown == 0) # light up randomly or if counting down
         if light_up:
