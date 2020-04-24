@@ -6,7 +6,7 @@ from random import randint
 # Custom 
 import Box, Platform
 from Gettables import Fruit
-from Constants import box_size, S, floor
+from Constants import box_size, S, floor,display_size
 from Make_Sounds import thud_sound
 
 white = (255,255,255)
@@ -73,7 +73,7 @@ class Level:
             for k in range(0,100,10):
                 for j in range(2):
 
-                    p = Platform.Platform(*[[((k-50)*100 + 50*randint(-10,10))*S,(j*40 + randint(-15,15))*S],[4*randint(5,20)*S,randint(5,20)*S]],color = white)
+                    p = Platform.Platform(*[[((k-50)*100 + 50*randint(-10,10))*S,40+ (j*40 + randint(-15,15))*S],[4*randint(5,20)*S,randint(5,20)*S]],color = white)
                     p.solid= False
                     p.corporeal = False
                     self.scenery.append(p)
@@ -172,7 +172,7 @@ class Level:
         # draw scenery (special rules for when they overlap with screen)
         for bod in self.scenery:
             if abs((screen.pos[0]-bod.pos[0])*(1.0-background_speed))<(screen.size[0]+bod.size[0]):
-                bod.draw(gameDisplay,screen.pos - [(character.pos[0]-bod.pos[0])*background_speed,0])
+                bod.draw(gameDisplay,[screen.pos[0] - (character.pos[0]-bod.pos[0])*background_speed-display_size[0]/2,0])
          
         # If flop just hit the ground, reset the ticker, if currently shaking, advance the ticker.
         if self.ticker == -1 and character.flopping == (character.flop_stun-1):
@@ -187,11 +187,12 @@ class Level:
                 if self.ticker>=0: # shakes from flop hit
                     bod.visual_shift(self.shifts[self.ticker])
                 if screen.overlap(bod):
-                    bod.draw(gameDisplay,screen.pos)
+                    bod.draw(gameDisplay,[character.pos[0]-display_size[0]/2,0])
                 if self.ticker>=0: # undo shift from flop hit
                     bod.visual_shift(-self.shifts[self.ticker])
         
         # draw counters and icons at top of display
         character.current_status.draw(gameDisplay)
+        
         
       
