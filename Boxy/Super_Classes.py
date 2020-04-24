@@ -1,4 +1,5 @@
 import pygame, numpy as np
+from Constants import S
 #import pygame.gfxdraw
 
 #####  Useful Matrices  ################################################################
@@ -77,15 +78,17 @@ class Body(Vector):
         if other == None:
             return False
         else:
-            return all(abs(self.pos-other.pos) <= (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size)))
+            overlaps =  (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size))-abs(self.pos-other.pos)
+             # if all dimensions overlap (account for float error)
+            return all(overlaps>-0.001) and any(overlaps>S) # and at least one is substantial (bigger than scale size)
        
     # returns dimension and overlap size of shallowest overlap (-1,None if no overlap)
     def overlap_dim(self,other): # could remove transform ability to speed computation?
         
         overlap_sizes = (np.matmul(self.transform,self.size) + np.matmul(other.transform,other.size)) - abs(self.pos-other.pos)
         
-        
-        if all(overlap_sizes>-0.0001): # if all dimensions overlap (account for float error)
+        # if all dimensions overlap (account for float error)
+        if all(overlap_sizes>-0.0001) and any(overlap_sizes>S): # and at least one is substantial (bigger than scale size)
            # print(np.matmul(self.transform,self.size), np.matmul(other.transform,other.size),self.pos, other.pos)
 
            # print(overlap_sizes)
