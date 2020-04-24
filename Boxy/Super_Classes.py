@@ -158,7 +158,7 @@ class Body(Vector):
         
     # Define this object as not 'on' any object
     def is_off(self):
-        if not self.resting_on is None:
+        if not (self.resting_on is None):
             self.vel += self.resting_on.vel
             (self.resting_on).on_me.remove(self) # remove this object from other's list of objects resting on it
             self.resting_on = None # remove other object from this one
@@ -171,7 +171,7 @@ class Body(Vector):
             bod.is_off()
             
 
-    # interact with player, self is assumed to be indestructable, non-bouncey, and solid
+    # interact with player (or any other object), self is assumed to be indestructable, non-bouncey, and solid
     def interact(self,player):    
         if not self.corporeal:
             return -1, None, None
@@ -186,21 +186,22 @@ class Body(Vector):
 
            # record squeeze, remove overlap, reduce velocity in this dimension to 0
                 #squeeze[dim][int(player.pos[dim] > i.pos[dim])] = i
-            player.pos[dim] += side*gap
-            if converging: 
-                player.vel[dim] = 0.0
+            if self.solid: # can't pass throgh
+                player.pos[dim] += side*gap
+                if converging: 
+                    player.vel[dim] = 0.0
 
-        if side == -1 and dim == 1:
-            player.is_on(self) # player above, colliding vertically
+        if side == -1 and dim == 1 and self.solid:
+            player.is_on(self) # player above, colliding vertically, with solid object
 
-        else: # if not colliding from above (including not collidin
+        else: # if not colliding from above (including not colliding
             
             if player.resting_on == self: # if player was on this Body, no more!
                 player.is_off()
                 player.vel += self.vel #retain velocity from moving object
 
             if player in self.on_me:
-                    self.on_me.remove(player)
+                self.on_me.remove(player)
         
         return dim,side,converging
         

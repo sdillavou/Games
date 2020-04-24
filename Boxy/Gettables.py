@@ -32,9 +32,10 @@ class Fruit(Body):
         self.shapes.append(Shape(nodes,color=(255,0,0),line_color=(150,0,0),line_width=2)) # add visible shape for box
 
     # make a sound and get rid of that fruit!
-    def destroy(self):
+    def destroy(self,get_goodies=True):
         super().destroy()
-        fruit_sound()
+        if get_goodies:
+            fruit_sound()
     
     # resolve interaction with player
     def interact(self,player):

@@ -1,6 +1,7 @@
 import numpy as np  # pygame, copy,
 #from random import randint
 from Super_Classes import Body, Shape, Vector
+from Box import Box
 import math
 import copy # remove this when you get a chance, it's inefficient
 from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color
@@ -139,6 +140,8 @@ class Player(Body):
         
         self.protector = Protector(self.pos - self.size*[self.direction,1.0])
         
+        Box.player = self # all boxes are now linked to this player!
+        
 ###############################################################################################
     # define relevant hit box (or None if no hit box being used)
     def hit_box(self):
@@ -247,7 +250,7 @@ class Player(Body):
         self.protector.vel = 0.7*self.protector.vel + 0.03*(self.pos + self.shift_path[self.animate]*[2,4] - self.size*[self.direction,1.0] - self.protector.pos)
             
     ######### FLAGS ###############################################
-
+    
         is_airborne = not isinstance(self.resting_on,Body)
         is_decelerating = (run_key == 0 or run_key*self.vel[0] <0)
         is_attacking = self.attacking>0

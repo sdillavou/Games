@@ -22,6 +22,9 @@ nitro_letter_color = (230,255,230)
 
 # For hit size
 explosion_size = 2.25 # times original box size
+explode_delay = 3 # this many frames after destruction, explosion hits next body
+
+destruct_length = 6 # box explodes (and is drawn exploding) for this many frames
 
 # For drawing
 explode_scale = 1.4
@@ -61,7 +64,7 @@ def resolve_fall(bod,bod2): #resolving fall for non-character objects
         dim,gap = bod.overlap_dim(bod2)
         if dim == 1 and gap>=0.1:# bod2 is overlapping vertically
             bod.is_on(bod2)
-            bod.pos[1] -= gap #shift bod up!
+            bod.recursive_shift([0,-gap]) #shift bod up!
             return True # solved!
     return False
 
@@ -75,10 +78,12 @@ def resolve_fall(bod,bod2): #resolving fall for non-character objects
 # Superclass for all box types, defines size
 
 class Box(Body): 
-    destruct_length = 5
+    destruct_length = destruct_length
     destruct_scale = break_scale
     size = [box_size,box_size]
     destruct_time = 10
+    player = None # all boxes track the player to add to status/interact
+   
     
     # Initialize box with location and color
     def __init__(self,position,color,line_color = (0,0,0),line_width = 2):   
@@ -87,7 +92,9 @@ class Box(Body):
         self.destruct_counter = -1 
         self.floating = False
         self.fruit = 0
+        self.lives = 0
         self.bounces = -1
+        self.hit_box = None # no hit box unless boom_box and exploding
         
         
     # Boxes are subject to gravity if not designated as floating and not resting on an object and also are solid/corporeal
@@ -95,17 +102,21 @@ class Box(Body):
         if not self.floating and not isinstance(self.resting_on,Body) and self.solid and self.corporeal:
             self.vel[1] += G
         Body.move(self)
-         
-    # box is destructable if it has a positive destruct length
-    def is_destructable(self):
-        return destruct_length>0
+        
     
     def draw(self,canvas,zero = np.array([0,0])):
         if self.destruct_counter == self.destruct_length: # remove box
             self.shapes[0].color = None
             self.shapes[0].line_color = None
         Body.draw(self,canvas,zero)
-
+    
+    def destroy(self, get_goodies=True):
+        
+        Body.destroy(self)       # make non-corporeal
+        # add goodies to the status if DESERVED
+        self.player.current_status.gobble_box(self,get_goodies)
+       
+   
         
 ########################################################################################
 ########################################################################################   
@@ -141,31 +152,20 @@ class Bounce_Box(Box):
         else: # not colliding vertically, no break or bounce
             return False, False
     
+########################################################################################
 
 # Class to handle explosive boxes
 class Boom_Box(Box):
     
-    player = None # all boom boxes track the player
     destruct_scale = explode_scale
-
+    explode_delay = explode_delay
         
     # What happens when this explosive dies
-    def destroy(self):
-        self.scale(explosion_size)   # explosion bigger than box
-        if self.overlap(self.player):# hit player if close enough
-            self.player.get_hit()
-            
-        Body.destroy(self)           # make non-corporeal
+    def destroy(self,get_goodies=False): #second input not used, just to allow for polymorphism
+        self.hit_box = Body(self.pos,self.size*explosion_size)
+        Box.destroy(self,False)      # make non-corporeal, no goodies
         boom_sound()                 # boom
-
-        # can be destroyed when far from player, need to log this here
-        self.player.current_status.counters['boxes'] += 1 
         
-       
-    
-    # Explode!
-    def draw(self,canvas,zero):
-        Body.draw(self,canvas,zero)
 
         
 ########################################################################################
@@ -186,7 +186,11 @@ class Metal(Box):
                 shp2.shift([i,j])
                 self.shapes.append(shp2) # add corner dots
 
-                
+    def destroy(self, get_goodies=False): # can't be destroyed, sucka
+        pass
+       
+########################################################################################
+
 # Class for wooden boxes
 class Wood(Bounce_Box):
         
@@ -203,26 +207,22 @@ class Wood(Bounce_Box):
         self.fruit = 1
 
         
-    def destroy(self):
-        Body.destroy(self)
+    def destroy(self,get_goodies = True):
+        Box.destroy(self,get_goodies)
         wood_break_sound()
         
     def interact(self,player):
         
         # if box is attacked in any way it breaks and doesn't impede player
         if self.overlap(player.hit_box()):
-            self.destroy()
-            player.current_status.counters['fruit'] += self.fruit
-            player.current_status.counters['boxes'] += 1
+            self.destroy(True) # get them goodies
             return
         
         break_box, bounce = self.break_or_bounce(player) # inherited from Bounce_Box
        
         if break_box:
-            self.destroy()
-            player.current_status.counters['fruit'] += self.fruit
-            player.current_status.counters['boxes'] += 1
-
+            self.destroy(True) # and get them goodies
+           
         if bounce!=0: 
             player.bounce(bounce) # bounce up or down
             if not break_box:
@@ -230,6 +230,7 @@ class Wood(Bounce_Box):
                     player.current_status.counters['fruit'] += 1
                     wood_bounce_sound()
 
+########################################################################################
         
 # Wooden box with metal lining
 class Metal_Wood(Box):
@@ -249,19 +250,20 @@ class Metal_Wood(Box):
         
         # box can be broken from flopping
         if player.flopping == player.flop_stun and self.overlap(player.hit_box()):
-            self.destroy()
-            player.current_status.counters['fruit'] += self.fruit
-            player.current_status.counters['boxes'] += 1
+            self.destroy(True) # get them goodies
             return
         
         # otherwise, indestructable platform
         Body.interact(self,player)
             
-    def destroy(self):
-        Body.destroy(self)
-        wood_break_sound()
+    def destroy(self,get_goodies = True):
+        if get_goodies: # false if exploded, which doesn't work here
+            Box.destroy(self,get_goodies)
+            wood_break_sound()
     
-    
+
+########################################################################################
+
 # class for volatile nitro boxes
 class Nitro(Boom_Box):
     # Initialize nitro box
@@ -294,11 +296,10 @@ class Nitro(Boom_Box):
     def interact(self,player):   
         # touching? blow up.
         if self.overlap(player) or self.overlap(player.hit_box()):
-            if self.player is None:
-                self.player = player
-            self.destroy()
+            self.destroy() # player death included in this line
             
-        
+########################################################################################
+
 # Class for tnt boxes
 class Tnt(Bounce_Box,Boom_Box):
 
@@ -353,15 +354,13 @@ class Tnt(Bounce_Box,Boom_Box):
             self.cooldown = 60
      
     # it's a boom box, baby
-    def destroy(self):
+    def destroy(self,get_goodies=False): # second input not used, just for polymorphism
         Boom_Box.destroy(self)
         self.countdown = -1 # no more sounds
       
     # tricky interactions with this here tnt box, it's got a detonate sequence, ya see   
     def interact(self,player):
-        
-        if self.player is None:
-            self.player = player
+     
         
         # if tnt box is attacked in any way it breaks and hits player
         if self.overlap(player.hit_box()):
@@ -379,7 +378,7 @@ class Tnt(Bounce_Box,Boom_Box):
             self.start_countdown()                 # start countdown!
                 
                 
-                    
+########################################################################################             
                     
 # Class for wooden boxes that can be bounced on multiple times
 class Bouncey_Wood(Wood):
@@ -392,7 +391,8 @@ class Bouncey_Wood(Wood):
             
         self.bounces = 10 # regular wooden boxes can take exactly one bounce, these do 10
         self.fruit = 1
-        
+
+########################################################################################
            
 # Class for wooden boxes that contain protection sprites
 class Protection(Wood):
@@ -405,10 +405,11 @@ class Protection(Wood):
         self.shapes[-1].shift(self.size*[0.3,-0.3]*protector_size/box_size) # eye facing one way
         self.shapes.append(Shape(self.self_shape([0.1,0.1]*protector_size/box_size),eye_color,None,line_width = 2)) 
         self.shapes[-1].shift(self.size*[-0.3,-0.3]*protector_size/box_size) # eye facing the other way
-        self.fruit = 0 # no fruit inside
-        
-    def interact(self,player):
-        Wood.interact(self,player)
-        if not self.corporeal: # got destroyed by above interaction
-            player.protection += 1 # add protection from breaking this box
+        self.fruit = 0 # no fruit inside   
+            
+    # if goodies, give that sprite!
+    def destroy(self,get_goodies=True):
+        if get_goodies:
+            self.player.protection += 1 # add protection from breaking this box
             protection_sound()   
+        Wood.destroy(self,get_goodies)

@@ -60,5 +60,18 @@ class Status():
         textRect2 = text2.get_rect()  
         textRect2.center = (display_size[0]- textRect2[2]/2-icon_size,display_height+icon_size*0.1) 
         gameDisplay.blit(text2, textRect2) 
-      
+        
+    
+    # add fruit, lives, and boxes to status counters. get_goodies = fruit/lives collected not destroyed
+    def gobble_box(self,other,get_goodies=True):
+
+        self.counters['boxes'] += 1
+        
+        # if goodies not destroyed (e.g blown up by tnt or nitro)
+        if get_goodies:
+            self.counters['fruit'] += other.fruit
+            self.counters['lives'] += other.lives
+            
+    
+    
        

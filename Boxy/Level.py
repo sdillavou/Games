@@ -54,15 +54,17 @@ class Level:
             b3 = Box.Metal_Wood(path[int(N/2)]-[0,box_size*3+d1.size[1]])
             b4 = Box.Wood(path[int(N/2)]-[0,box_size*5+d1.size[1]])
             
-            a0 = Box.Protection(a2.pos - [box_size*2,0])
+            a0 = Box.Tnt(a2.pos - [box_size*2,0])
             a01 = Box.Protection(a0.pos - [0,box_size*2])
             
             
-            a00 = Box.Tnt(a0.pos - [box_size*2,0])
+            a00 = Box.Protection(a0.pos - [box_size*2,0])
             
             
             a001 = Box.Tnt(a0.pos - [box_size*2,box_size*6])
             a001.floating = True
+            
+            f = Fruit(a0.pos - [box_size*2,box_size*8])
 
 
             self.master_platform_list = [p1,p2,d1,d2]
@@ -99,8 +101,11 @@ class Level:
             for k in range(1,10):
                 self.master_gettable_list.append(Fruit(a.pos + [600*S+box_size*2*k,-3*2*box_size]))
 
-         
+            self.master_gettable_list.append(f)
+            
             self.player_start = [200*S,floor-300*S]
+            self.baddie_list = []
+            self.master_baddie_list = []
         else:
             
             self.scenery = []
@@ -110,6 +115,8 @@ class Level:
             self.foreground_list = [] 
             self.master_gettable_list = []
             self.player_start = [0.0,0.0]
+            self.baddie_list = []
+            self.master_baddie_list = []
             
         
     # Reset the level by copying master lists and clearing the foreground, then letting objects settle   
@@ -119,8 +126,9 @@ class Level:
         self.platform_list = copy.deepcopy(self.master_platform_list)
         self.box_list = copy.deepcopy(self.master_box_list)
         self.gettable_list = copy.deepcopy(self.master_gettable_list)
+        self.baddie_list = copy.deepcopy(self.master_baddie_list)
         self.foreground_list = []
-        self.big_list = [self.background_list, self.platform_list, self.box_list, self.gettable_list, self.foreground_list]
+        self.big_list = [self.background_list, self.platform_list, self.box_list, self.gettable_list, self.baddie_list, self.foreground_list]
 
         # let objects find what they're resting on
         self.move_objects(land_sound_flag=False) # silently let things find their place before the curtain rises
@@ -133,25 +141,31 @@ class Level:
      ## link all boxes to platforms they are standing on
         for bod in self.box_list:
             bod.move() # boxes not floating and not resting on will accelerate down
-            if bod.vel[1] >0 and bod.solid:
-                for bod2 in self.platform_list+self.box_list:
+            if bod.vel[1] >0: # if falling 
+                
+                for bod2 in self.platform_list+self.box_list: # find a landing spot
                     if Box.resolve_fall(bod,bod2):
+                        
+                        # if not just touching another falling box, you've landed bud.
                         if not isinstance(bod2,Box.Box) or bod2.vel[1] == 0:
-                            if land_sound_flag:
-                                thud_sound() # play hitting ground sound, or alternate sound (or nothing) from input
+                            
+                            bod.vel[1] = 0   #stop falling.
+                            
+                            if land_sound_flag: # if this is flagged (i.e. if this is in game not resetting)
+                                thud_sound() # play hitting ground sound
                                 
                                 # tnt boxes start timers if hitting the ground or getting hit (not on reset though)
                                 for b in bod.recursive_dependent_list()+[bod2]: # the base box or anything on the falling one 
                                     if isinstance(b,Box.Tnt):
                                         if b.countdown == -1:
                                             b.start_countdown()
-                                    
-                            bod.vel[1] = 0
+                                           
+                            break # no need to check for any more landing spots
                             
-                            break
-                            
-        for bod in self.platform_list: # platforms do not fall, they float.
-            bod.move()
+        for bod in self.platform_list+self.baddie_list: # platforms and baddies* do not fall, they float.
+            bod.move()                                                         # *for now?
+            
+            
             
     
     # draw scenery, all bodies, player, and status. Also remove destroyed objects, and shift destroying objects to front
@@ -163,7 +177,7 @@ class Level:
                 self.foreground_list.remove(bod)
     
         # move all non-corporeal objects to the foreground
-        for body_list in [self.box_list, self.gettable_list]:
+        for body_list in [self.box_list, self.gettable_list, self.baddie_list]:
             for bod in body_list[::-1]: # need to go in reverse else removal of two objects doesn't work
                 if not bod.corporeal:
                     body_list.remove(bod)
@@ -197,5 +211,31 @@ class Level:
         # draw counters and icons at top of display
         character.current_status.draw(gameDisplay)
         
+    # all objects interact with player
+    def interact(self,character):
+    
+        for bod in self.box_list+self.platform_list+self.gettable_list+self.baddie_list:
+            bod.interact(character) # see how it interacts with character
         
-      
+    # exploding Boom_Box objects destroy those around them and hit player   
+    def explosions(self,character): 
+        
+        # handle currently exploding boxes
+        for boom in self.foreground_list: 
+            
+            if character.resting_on is boom: # can't rest on an explosion buddy
+                character.is_off()
+            
+            # if this is a boom_box that blew up at least a few frames ago
+            if isinstance(boom,Box.Boom_Box) and boom.destruct_counter <= (boom.destruct_length-boom.explode_delay): 
+               
+                # check for anything nearby
+                for bod in self.box_list+self.baddie_list+self.gettable_list: 
+                    
+                    if bod.corporeal and boom.hit_box.overlap(bod):# it hits one of these bad boys and they're unexploded
+                        bod.destroy(False) # no goodies tho.
+                        
+                
+                # also if it hits the character, get it!
+                if boom.hit_box.overlap(character): 
+                    character.get_hit() # multiple hits fine, character is invulnerable after one
