@@ -6,12 +6,11 @@ from random import randint
 # Custom 
 import Box, Platform
 from Gettables import Fruit
-from Constants import box_size, S, floor,display_size
+from Constants import box_size, S, floor,display_size, G
 from Make_Sounds import thud_sound
 
 white = (255,255,255)
 background_speed = 7.0/8.0
-
 
 
 class Level:
@@ -38,70 +37,73 @@ class Level:
             d1 = Platform.Moving_Platform([box_size*2,box_size/3],copy.copy(path),color=(50,50,50),line_color = None ,line_width = 2)
             d2 = Platform.Moving_Platform([box_size*2,box_size/3],path[int(N/2):]+path[:int(N/2)],color=(50,50,50),line_color = (0,0,0) ,line_width = 2)
             p1 = Platform.Platform([100*S,floor+50*S],[200*S,50*S])
-            p2 = Platform.Platform([1000*S,floor+50*S],[300*S,50*S])
+            p2 = Platform.Platform([1500*S,floor+50*S],[800*S,50*S])
 
             p0 = Platform.Platform(*[[500*S,floor],[10*S,10*S]])
             p0.solid = False
             p0.corporeal = False
 
 
-           
             a = Box.Nitro(p1.pos - [-box_size*100/30,p1.size[1]+box_size])
-            a1 = Box.Metal(a.pos - [0,box_size*2])
-            a2 = Box.Nitro(a.pos - [box_size*2,0])
-            a3 = Box.Metal_Wood(a.pos - [box_size*2,box_size*2])
+
+           
             b2 = Box.Bouncey_Wood(path[int(N/2)]-[0,box_size+d1.size[1]])
             b3 = Box.Metal_Wood(path[int(N/2)]-[0,box_size*3+d1.size[1]])
             b4 = Box.Wood(path[int(N/2)]-[0,box_size*5+d1.size[1]])
+    
             
-            a0 = Box.Tnt(a2.pos - [box_size*2,0])
-            a01 = Box.Protection(a0.pos - [0,box_size*2])
+       
             
-            
-            a00 = Box.Protection(a0.pos - [box_size*2,0])
-            
-            
-            a001 = Box.Tnt(a0.pos - [box_size*2,box_size*6])
-            a001.floating = True
-            
-            f = Fruit(a0.pos - [box_size*2,box_size*8])
+         #   f = Fruit(a0.pos - [box_size*2,box_size*8])
 
 
             self.master_platform_list = [p1,p2,d1,d2]
-            self.master_box_list = [a001,a00,a0,a01,a,a1,a2,a3,b2,b3,b4]
+            self.master_box_list = []
             self.background_list = [p0]
 
-
+            for k in range(10):
+                self.add_box('metal',[25+k,0])
+                
+            self.add_box('protection',[0,0])
+            self.add_box('tnt',[0,3],True)
+            self.add_box('tnt',[1,0])
+            self.add_box('nitro',[2,0])
+            self.add_box('nitro',[3,0])
+           # self.add_box('protection',[1,3])
+            self.add_box('protection',[1,1])
+            self.add_box('metal_wood',[2,1])
+            self.add_box('metal',[3,1])
+                
             for k in range(0,100,10):
                 for j in range(2):
 
-                    p = Platform.Platform(*[[((k-50)*100 + 50*randint(-10,10))*S,40+ (j*40 + randint(-15,15))*S],[4*randint(5,20)*S,randint(5,20)*S]],color = white)
+                    p = Platform.Platform(*[[((k-50)*100*S + 50*randint(-10,10))*S,40*S+ (j*40 + randint(-15,15))*S],[4*randint(5,20)*S,randint(5,20)*S]],color = white)
                     p.solid= False
                     p.corporeal = False
                     self.scenery.append(p)
 
 
-            for k in range(4):
-                for i in range(3):
-                    if i == 0:
-                        self.master_box_list.append(Box.Metal_Wood(a.pos + [600*S+box_size*2*k,-i*2*box_size]))
-                    else:
-                        self.master_box_list.append(Box.Wood(a.pos + [600*S+box_size*2*k,-i*2*box_size]))
-                        
-            self.master_box_list.append(Box.Tnt(a.pos + [600*S,-3*2*box_size]))
+      #      for k in range(4):
+      #          for i in range(3):
+      #              if i == 0:
+      #                  self.master_box_list.append(Box.Metal_Wood(a.pos + [600*S+box_size*2*k,-i*2*box_size]))
+      #              else:
+      #                  self.master_box_list.append(Box.Wood(a.pos + [600*S+box_size*2*k,-i*2*box_size]))
+      #                  
+      #      self.master_box_list.append(Box.Tnt(a.pos + [600*S,-3*2*box_size]))
 
                         
                         
-            for i in [0,3.0]:
-                self.master_box_list.append(Box.Bouncey_Wood(a.pos + [600*S+box_size*2*6,-(i+1)*2*box_size]))
-                self.master_box_list[-1].floating = True  
+      #      for i in [0,3.0]:
+      #          self.master_box_list.append(Box.Bouncey_Wood(a.pos + [600*S+box_size*2*6,-(i+1)*2*box_size]))
+      #          self.master_box_list[-1].floating = True  
 
             self.master_gettable_list = []
 
             for k in range(1,10):
                 self.master_gettable_list.append(Fruit(a.pos + [600*S+box_size*2*k,-3*2*box_size]))
 
-            self.master_gettable_list.append(f)
+
             
             self.player_start = [200*S,floor-300*S]
             self.baddie_list = []
@@ -221,9 +223,9 @@ class Level:
     def explosions(self,character): 
         
         # handle currently exploding boxes
-        for boom in self.foreground_list: 
+        for boom in self.foreground_list: # this is list of dying things, very short
             
-            if character.resting_on is boom: # can't rest on an explosion buddy
+            if character.resting_on is boom: # can't rest on an explosion, buddy
                 character.is_off()
             
             # if this is a boom_box that blew up at least a few frames ago
@@ -239,3 +241,12 @@ class Level:
                 # also if it hits the character, get it!
                 if boom.hit_box.overlap(character): 
                     character.get_hit() # multiple hits fine, character is invulnerable after one
+                    
+     
+    # Add box to the level, position is scaled by box_size*2 and starting at floor.
+    def add_box(self,box_type,position,floating=False):
+        
+        position[1]*=-1.0
+        pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor-box_size]
+        self.master_box_list.append(Box.create_box(box_type,pos,floating))
+        

@@ -6,7 +6,7 @@ import math
 import copy # remove this when you get a chance, it's inefficient
 from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color
 
-from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound, footstep_sound
+from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound, protection_sound, footstep_sound
 
 
 ##### Useful Identities ################################################################
@@ -47,7 +47,8 @@ flop_bounce = -5.0*G**2/S/0.8**2
 flop_width = 0.95
 flop_fraction = 0.15
 
-invulnerable_timer = 45
+invulnerable_timer = 45 # when hit
+invincible_timer = 300 # when getting third protection
 
 legs_color = (200,50,50)
 hand_color = legs_color
@@ -167,7 +168,18 @@ class Player(Body):
                 self.invulnerable = invulnerable_timer
                 power_down_sound()
         # if invulnerable, ignore this hit
-
+        
+        
+###############################################################################################
+    # get protection! (invulnerable for a bit protection already 2)
+    def get_protection(self):
+        if self.protection < 2: 
+            self.protection += 1 
+        else:
+            self.invulnerable = invincible_timer
+        
+        protection_sound()  
+        
 ############################################################################################### 
     # get hit by something (die if no protection)
     def move(self):
@@ -239,7 +251,7 @@ class Player(Body):
     
     ######### DIRECTION ###########################################
 
-        if run_key !=0:
+        if run_key !=0 and not (self.sliding > 0): # can't change direction during slides
             self.direction = run_key
 
     ######### INVULNERABILITY and PROTECTOR #######################

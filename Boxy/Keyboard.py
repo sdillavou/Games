@@ -20,6 +20,7 @@ class Keyboard:
         self.attack_key = False #instantaneous
         
         self.crashed = False
+        
     
     
     
@@ -53,6 +54,9 @@ class Keyboard:
                     self.attack_key = True
 
                 elif event.key == pygame.K_q:
+                    self.crashed = True
+                    
+                elif event.key == pygame.K_p:
                     self.crashed = True
 
             elif event.type == pygame.KEYUP:

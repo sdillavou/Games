@@ -1,6 +1,6 @@
 import numpy as np
 
-S=1.2 # global scaling
+S=1.2 # global scaling 1.2
 #S = 0.5
 S = float(S) # doubly sure... heh
 
@@ -17,4 +17,4 @@ protector_line_color = (255,255,255)
 protector_size = np.array([box_size*0.5,box_size*0.5],dtype='float')
 eye_color = (200,200,200)
 
-
+sky = (205, 230, 247)

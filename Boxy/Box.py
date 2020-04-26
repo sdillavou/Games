@@ -2,7 +2,7 @@ import copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
 from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color
-from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, protection_sound, countdown_sound
+from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, countdown_sound
 
 
 ##### Useful Identities ################################################################
@@ -64,10 +64,9 @@ def resolve_fall(bod,bod2): #resolving fall for non-character objects
         dim,gap = bod.overlap_dim(bod2)
         if dim == 1 and gap>=0.1:# bod2 is overlapping vertically
             bod.is_on(bod2)
-            bod.recursive_shift([0,-gap]) #shift bod up!
+            bod.recursive_shift([0,-gap]) #shift bod (and those resting on it) up!
             return True # solved!
     return False
-
 
 
 ##### Classes           ################################################################
@@ -410,6 +409,14 @@ class Protection(Wood):
     # if goodies, give that sprite!
     def destroy(self,get_goodies=True):
         if get_goodies:
-            self.player.protection += 1 # add protection from breaking this box
-            protection_sound()   
-        Wood.destroy(self,get_goodies)
+            self.player.get_protection()# add protection from breaking this box 
+        Wood.destroy(self,get_goodies) # get fruit (0) and box
+        
+#### Builder function ########################################################################
+
+box_dict = {'metal':Metal, 'wood':Wood, 'metal_wood':Metal_Wood, 'tnt':Tnt, 'nitro':Nitro, 'bouncey_wood':Bouncey_Wood, 'protection':Protection}
+
+def create_box(box_type,position,floating = False):
+    x = box_dict[box_type](position)
+    x.floating = floating
+    return x
