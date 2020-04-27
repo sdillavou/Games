@@ -16,5 +16,7 @@ protector_color = (60,60,255)
 protector_line_color = (255,255,255)
 protector_size = np.array([box_size*0.5,box_size*0.5],dtype='float')
 eye_color = (200,200,200)
+platform_color = (100,100,100)
+
 
 sky = (205, 230, 247)

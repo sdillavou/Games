@@ -6,7 +6,7 @@ from random import randint
 # Custom 
 import Box, Platform
 from Gettables import Fruit
-from Constants import box_size, S, floor,display_size, G
+from Constants import box_size, S, floor,display_size, G, platform_color 
 from Make_Sounds import thud_sound
 
 white = (255,255,255)
@@ -57,7 +57,7 @@ class Level:
          #   f = Fruit(a0.pos - [box_size*2,box_size*8])
 
 
-            self.master_platform_list = [p1,p2,d1,d2]
+            self.master_platform_list = [d1,d2]
             self.master_box_list = []
             self.background_list = [p0]
 
@@ -73,6 +73,9 @@ class Level:
             self.add_box('protection',[1,1])
             self.add_box('metal_wood',[2,1])
             self.add_box('metal',[3,1])
+            
+            self.add_floor(-1,4)
+            self.add_floor(12,20)
                 
             for k in range(0,100,10):
                 for j in range(2):
@@ -234,9 +237,9 @@ class Level:
                 # check for anything nearby
                 for bod in self.box_list+self.baddie_list+self.gettable_list: 
                     
-                    if bod.corporeal and boom.hit_box.overlap(bod):# it hits one of these bad boys and they're unexploded
+                    if bod.corporeal and boom.hit_box.overlap(bod): # it hits one of these bad boys and they're unexploded
                         bod.destroy(False) # no goodies tho.
-                        
+                     
                 
                 # also if it hits the character, get it!
                 if boom.hit_box.overlap(character): 
@@ -250,3 +253,6 @@ class Level:
         pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor-box_size]
         self.master_box_list.append(Box.create_box(box_type,pos,floating))
         
+    # Add platform to the level, position is scaled by box_size*2. Height is floor.
+    def add_floor(self,start,stop,color=platform_color,line_color = (0,0,0),line_width=2): 
+        self.master_platform_list.append(Platform.Platform([(start+stop)*box_size,floor+50*S],[(stop-start+1)*box_size,50*S],color,line_color,line_width))

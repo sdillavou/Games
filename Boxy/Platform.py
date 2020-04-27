@@ -1,5 +1,7 @@
 import pygame, copy, numpy as np
 from Super_Classes import Body, Shape, Looper
+from Constants import platform_color
+
 
 ##### Useful Identities ################################################################
 
@@ -12,7 +14,6 @@ nitro_color = (10,170,10)
 tnt_color = (200,0,0)
 tnt_letter_color = (230,200,50)
 nitro_letter_color = (230,255,230)
-platform_color = (100,100,100)
 
 
 
