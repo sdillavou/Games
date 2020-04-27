@@ -3,6 +3,7 @@ from random import randint
 from Super_Classes import Body, Shape
 from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color
 from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, countdown_sound
+from Boomer import Boomer
 
 
 ##### Useful Identities ################################################################
@@ -20,14 +21,9 @@ tnt_letter_color = (230,200,50)
 tnt_light_color = (255,100,100)
 nitro_letter_color = (230,255,230)
 
-# For hit size
-explosion_size = 2.25 # times original box size
-explode_delay = 3 # this many frames after destruction, explosion hits next body
 
-destruct_length = 6 # box explodes (and is drawn exploding) for this many frames
 
 # For drawing
-explode_scale = 1.4
 break_scale = 1.3
 
 # for timing
@@ -77,7 +73,6 @@ def resolve_fall(bod,bod2): #resolving fall for non-character objects
 # Superclass for all box types, defines size
 
 class Box(Body): 
-    destruct_length = destruct_length
     destruct_scale = break_scale
     size = [box_size,box_size]
     destruct_time = 10
@@ -85,11 +80,11 @@ class Box(Body):
    
     
     # Initialize box with location and color
-    def __init__(self,position,color,line_color = (0,0,0),line_width = 2):   
+    def __init__(self,position,color,line_color = (0,0,0),line_width = 2,floating=False):   
         Body.__init__(self,position,self.size,True,True,[0,0]) 
         self.shapes.append(Shape(self.self_shape(),color,line_color = line_color,line_width = line_width)) # add visible shape for box
         self.destruct_counter = -1 
-        self.floating = False
+        self.floating = floating
         self.fruit = 0
         self.lives = 0
         self.bounces = -1
@@ -109,7 +104,7 @@ class Box(Body):
             self.shapes[0].line_color = None
         Body.draw(self,canvas,zero)
     
-    def destroy(self, get_goodies=True):
+    def destroy(self, get_goodies=False):
         
         Body.destroy(self)       # make non-corporeal
         # add goodies to the status if DESERVED
@@ -154,17 +149,13 @@ class Bounce_Box(Box):
 ########################################################################################
 
 # Class to handle explosive boxes
-class Boom_Box(Box):
+class Boom_Box(Box,Boomer):
     
-    destruct_scale = explode_scale
-    explode_delay = explode_delay
         
     # What happens when this explosive dies
-    def destroy(self,get_goodies=False): #second input not used, just to allow for polymorphism
-        self.hit_box = Body(self.pos,self.size*explosion_size)
-        Box.destroy(self,False)      # make non-corporeal, no goodies
-        boom_sound()                 # boom
-        
+    def destroy(self): 
+        Box.destroy(self,False)      # make non-corporeal, no goodies (not that there are any)
+        Boomer.explode(self) # sound and hit box
 
         
 ########################################################################################
@@ -175,8 +166,8 @@ class Boom_Box(Box):
 class Metal(Box):
 
     # Initialize metal box
-    def __init__(self,position):
-        Box.__init__(self,position,metal_color)
+    def __init__(self,position,floating=False):
+        Box.__init__(self,position,metal_color,floating=floating)
         shp = Shape(self.self_shape(),color=None,line_color = (0,0,0),line_width = 2)
         shp.transform([[0.02,0],[0,0.02]])
         for i in [-self.size[0]*.7, self.size[0]*.7]:
@@ -194,8 +185,8 @@ class Metal(Box):
 class Wood(Bounce_Box):
         
     # Initialize wood box
-    def __init__(self,position):
-        Box.__init__(self,position,wood_color)
+    def __init__(self,position,floating=False):
+        Box.__init__(self,position,wood_color,floating=floating)
         shp = [(-self.size[0]*0.65,-self.size[0]*0.8),(self.size[0]*0.65,-self.size[0]*0.8),(0,-self.size[0]*0.15)]
         tri = Shape(shp,color = dark_wood_color,line_color = dark_wood_color,line_width = 2)
         for _ in range(4):
@@ -206,7 +197,7 @@ class Wood(Bounce_Box):
         self.fruit = 1
 
         
-    def destroy(self,get_goodies = True):
+    def destroy(self,get_goodies=False):
         Box.destroy(self,get_goodies)
         wood_break_sound()
         
@@ -234,8 +225,8 @@ class Wood(Bounce_Box):
 # Wooden box with metal lining
 class Metal_Wood(Box):
     # Initialize wood box
-    def __init__(self,position):
-        super().__init__(position,metal_color)
+    def __init__(self,position,floating=False):
+        super().__init__(position,metal_color,floating=floating)
         shp = [(-self.size[0]*0.65,-self.size[0]*0.8),(self.size[0]*0.65,-self.size[0]*0.8),(0,-self.size[0]*0.15)]
         tri = Shape(shp,color = wood_color,line_color = dark_wood_color,line_width = 2)
         for _ in range(4):
@@ -255,7 +246,7 @@ class Metal_Wood(Box):
         # otherwise, indestructable platform
         Body.interact(self,player)
             
-    def destroy(self,get_goodies = True):
+    def destroy(self,get_goodies=False):
         if get_goodies: # false if exploded, which doesn't work here
             Box.destroy(self,get_goodies)
             wood_break_sound()
@@ -266,8 +257,8 @@ class Metal_Wood(Box):
 # class for volatile nitro boxes
 class Nitro(Boom_Box):
     # Initialize nitro box
-    def __init__(self,position):
-        super().__init__(position,nitro_color)
+    def __init__(self,position,floating=False):
+        super().__init__(position,nitro_color,floating=floating)
         self.shapes.append(n_shape(self.size[0],[0,0],[[8/15,0],[0,10/15]],nitro_letter_color,None)) # add N to front of box
         self.temporary_shift = [0,0]
     # Draw nitro, but randomly make it jump for a frame
@@ -306,8 +297,8 @@ class Tnt(Bounce_Box,Boom_Box):
     countdown_sounds = countdown_timings
     
     # Initialize tnt box
-    def __init__(self,position):
-        super().__init__(position,tnt_color)
+    def __init__(self,position,floating=False):
+        super().__init__(position,tnt_color,floating=floating)
         for k in [-1,1]:
             self.shapes.append(t_shape(self.size[0],[k*5*self.size[0]/12,0],[[1/3,0],[0,5/12]],tnt_letter_color,None)) # add T to front of box
         self.shapes.append(n_shape(self.size[0],[0,0],[[1/3,0],[0,5/12]],tnt_letter_color,None)) # add N to front of box
@@ -353,7 +344,7 @@ class Tnt(Bounce_Box,Boom_Box):
             self.cooldown = 60
      
     # it's a boom box, baby
-    def destroy(self,get_goodies=False): # second input not used, just for polymorphism
+    def destroy(self):
         Boom_Box.destroy(self)
         self.countdown = -1 # no more sounds
       
@@ -382,8 +373,8 @@ class Tnt(Bounce_Box,Boom_Box):
 # Class for wooden boxes that can be bounced on multiple times
 class Bouncey_Wood(Wood):
     # Initialize bouncy wood box
-    def __init__(self,position):
-        super().__init__(position)   
+    def __init__(self,position,floating=False):
+        super().__init__(position,floating)   
         self.shapes = self.shapes[0:1]
         for k in range(-2,3):
             self.shapes.append(Shape(rect([self.size[0]*0.08,self.size[1]*0.8],[self.size[0]*k/3,0]),color = dark_wood_color,line_color = dark_wood_color,line_width = 2))
@@ -396,8 +387,8 @@ class Bouncey_Wood(Wood):
 # Class for wooden boxes that contain protection sprites
 class Protection(Wood):
     # Initialize protection wood box
-    def __init__(self,position):
-        super().__init__(position)   
+    def __init__(self,position,floating=False):
+        super().__init__(position,floating=floating)   
         self.shapes.append(Shape(self.self_shape(protector_size/box_size),protector_line_color,None,line_width = 2)) 
         self.shapes.append(Shape(self.self_shape(0.9*protector_size/box_size),protector_color,None,line_width = 2)) 
         self.shapes.append(Shape(self.self_shape([0.1,0.1]*protector_size/box_size),eye_color,None,line_width = 2))
@@ -407,7 +398,7 @@ class Protection(Wood):
         self.fruit = 0 # no fruit inside   
             
     # if goodies, give that sprite!
-    def destroy(self,get_goodies=True):
+    def destroy(self,get_goodies=False):
         if get_goodies:
             self.player.get_protection()# add protection from breaking this box 
         Wood.destroy(self,get_goodies) # get fruit (0) and box
@@ -417,6 +408,4 @@ class Protection(Wood):
 box_dict = {'metal':Metal, 'wood':Wood, 'metal_wood':Metal_Wood, 'tnt':Tnt, 'nitro':Nitro, 'bouncey_wood':Bouncey_Wood, 'protection':Protection}
 
 def create_box(box_type,position,floating = False):
-    x = box_dict[box_type](position)
-    x.floating = floating
-    return x
+    return box_dict[box_type](position,floating)

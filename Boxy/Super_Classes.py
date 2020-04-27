@@ -31,7 +31,7 @@ class Vector:
 
 # Class of Vectors with 2D size, and transformation. Can be visible, corporeal, and solid, and contains shapes to draw
 class Body(Vector): 
-    destruct_length = 10
+    destruct_length = 6
     destruct_scale = 0.8
     
     # Create & initialize any specified variables  

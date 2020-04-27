@@ -23,7 +23,7 @@ tnt_sound = pygame.mixer.Sound('sounds/tnt_sound2.wav')
 tnt_sound.set_volume(0.5)
 
 blip = pygame.mixer.Sound('sounds/blip.wav')
-blip.set_volume(0.7)
+blip.set_volume(0.4)
 
 ouch = pygame.mixer.Sound('sounds/ouch.wav')
 ouch.set_volume(0.7)

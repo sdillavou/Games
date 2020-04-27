@@ -4,9 +4,10 @@ import math, copy, numpy as np
 from random import randint
 
 # Custom 
-import Box, Platform
+import Box, Platform, Baddie
 from Gettables import Fruit
-from Constants import box_size, S, floor,display_size, G, platform_color 
+from Constants import box_size, S, floor,display_size, G, platform_color
+from Boomer import Boomer
 from Make_Sounds import thud_sound
 
 white = (255,255,255)
@@ -111,6 +112,9 @@ class Level:
             self.player_start = [200*S,floor-300*S]
             self.baddie_list = []
             self.master_baddie_list = []
+            
+            
+            self.master_baddie_list.append(Baddie.Owl([[box_size*2,box_size*4],[box_size*6,box_size*4]]))
         else:
             
             self.scenery = []
@@ -232,13 +236,13 @@ class Level:
                 character.is_off()
             
             # if this is a boom_box that blew up at least a few frames ago
-            if isinstance(boom,Box.Boom_Box) and boom.destruct_counter <= (boom.destruct_length-boom.explode_delay): 
+            if isinstance(boom,Boomer) and boom.destruct_counter <= (boom.destruct_length-boom.explode_delay): 
                
                 # check for anything nearby
                 for bod in self.box_list+self.baddie_list+self.gettable_list: 
                     
                     if bod.corporeal and boom.hit_box.overlap(bod): # it hits one of these bad boys and they're unexploded
-                        bod.destroy(False) # no goodies tho.
+                        bod.destroy() # no goodies tho (false is default)
                      
                 
                 # also if it hits the character, get it!
