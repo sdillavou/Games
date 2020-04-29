@@ -74,6 +74,7 @@ class Level:
             self.add_box('protection',[1,1])
             self.add_box('metal_wood',[2,1])
             self.add_box('metal',[3,1])
+            self.add_box('nitro',[2,4],True)
             
             self.add_floor(-1,4)
             self.add_floor(12,20)
@@ -114,7 +115,7 @@ class Level:
             self.master_baddie_list = []
             
             
-            self.master_baddie_list.append(Baddie.Owl([[box_size*2,box_size*4],[box_size*6,box_size*4]]))
+            self.master_baddie_list.append(Baddie.Owl([[box_size*2,box_size*4],[box_size*10,box_size*4]]))
         else:
             
             self.scenery = []

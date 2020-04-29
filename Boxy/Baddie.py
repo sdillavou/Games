@@ -1,22 +1,22 @@
 import copy, numpy as np
 from math import copysign
 from Super_Classes import Body, Shape, Looper
-from Constants import box_size
+from Constants import box_size, spikey_box, animate_path, rect, S
 from Boomer import Boomer
+from Make_Sounds import fruit_sound
 
 
 ##### Useful Identities ################################################################
 
-owl_speed = 5
+owl_speed = 4
 owl_size = box_size*np.array([0.8,0.5])
-owl_color = (150,50,100)
+owl_color = (180,160,130)
 
 
 ##### Useful Functions  ################################################################
 
 
-def rect(size,shift=[0,0]):
-        return [(-size[0]+shift[0],-size[1]+shift[1]),(-size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],-size[1]+shift[1])]
+
 
 
     
@@ -37,6 +37,10 @@ class Baddie(Body):
         self.animate = 0
         self.floating = floating
         self.direction = 1
+        self.switchers = []
+        self.animators = []
+        self.shift_path = [np.array([0,0])]
+        self.destroy_sound = fruit_sound
         
         
     # Baddies are subject to gravity if not designated as floating and not resting on an object and also are solid/corporeal
@@ -52,17 +56,28 @@ class Baddie(Body):
         
         if self.vel[0] !=0:
             self.direction = copysign(1.0,self.vel[0])
+            
         
         
     
     def draw(self,canvas,zero = np.array([0,0])):
-        if any(self.vel!=0):
-            self.animate+=3
-        else:
-            self.animate+=1
+        
+        
+        self.animate += 1 + 3*(any(self.vel !=0))
+        self.animate %= len(self.shift_path)
             
+        for s in self.switchers: # switch eyes, wings, feet, etc depending on direction
+            s[0].visible = self.direction == -1
+            s[1].visible = self.direction == 1
+            
+        for a in self.animators:
+            a.shift(self.shift_path[self.animate])
+               
         Body.draw(self,canvas,zero)
         
+        for a in self.animators:
+            a.shift(-self.shift_path[self.animate])
+            
     
     # touching a baddie is bad. gotta hit with a kill box.
     def interact(self,player):
@@ -84,7 +99,9 @@ class Baddie(Body):
         if player.protection>=0: # player didn't die, baddie should die
             self.destroy()
 
-            
+    def destroy(self):
+        super().destroy()
+        self.destroy_sound()
         
 ########################################################################################
 ########################################################################################   
@@ -137,8 +154,23 @@ class Owl(Flier):
         Flier.__init__(self,path_pts,owl_speed,owl_size)
 
         self.shapes.append(Shape(self.self_shape(),color=owl_color,line_color = (0,0,0),line_width = 2))
+        self.shapes.append(Shape(rect([S*2,S*2]),color=(0,0,0),line_color = (0,0,0),line_width = 2))
+        self.shapes[-1].shift(self.size*[-0.7,-0.55])
+        self.shapes.append(Shape(rect([S*2,S*2]),color=(0,0,0),line_color = (0,0,0),line_width = 2))
+        self.shapes[-1].shift(self.size*[0.7,-0.55])
+
         
-    
+        self.shapes.append(Shape(spikey_box([2*box_size/3,box_size/5],[0,0,0,1]),color=owl_color,line_color = (0,0,0),line_width = 2))
+        self.shapes[-1].shift(self.size*[0.7,-0.55])
+        self.shapes.append(Shape(spikey_box([2*box_size/3,box_size/5],[0,1,0,0]),color=owl_color,line_color = (0,0,0),line_width = 2))
+        self.shapes[-1].shift(self.size*[-0.7,-0.55])
+        
+        self.switchers = [self.shapes[1:3], self.shapes[3:5]]
+        self.animators = self.shapes[3:5]
+        
+        self.shift_path = animate_path([0,S*3],[0,2],150)
+        
+        
     # touching a baddie is bad. gotta jump on it.
     def interact(self,player):
         

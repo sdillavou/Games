@@ -4,9 +4,9 @@ from Super_Classes import Body, Shape, Vector
 from Box import Box
 import math
 import copy # remove this when you get a chance, it's inefficient
-from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color
+from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color, animate_path, spikey_box
 
-from Make_Sounds import slide_sound, thud_sound, ouch_sound, power_down_sound, protection_sound, footstep_sound
+from Make_Sounds import slide_sound, ouch_sound, power_down_sound, protection_sound, footstep_sound
 
 
 ##### Useful Identities ################################################################
@@ -36,8 +36,7 @@ attack_fraction = np.array([1.2,1.1],dtype='float')
 
 
 attack_color = (160,160,160)
-spike_height = 5.0*S
-approx_spike_size = 5.0*S
+
 
 crouch_fraction = 0.7
 crouch_release_vel = -0.0001
@@ -62,29 +61,7 @@ rot90mat = np.array([[0,-1],[1,0]],dtype=float)
 ##### Useful Functions  ################################################################
 
 
-def spikey_box(size,spike_sides=[1,1,1,1]):
-    
-    helper = [np.array([-1.0,-1.0]),np.array([1.0,-1.0]),np.array([1.0,1.0]),np.array([-1.0,1.0]),np.array([-1.0,-1.0])]
-    nodes = []
-    spikey_size = size*1.0 # new variable to avoid changing input size
-    for i in range(2):
-        spikey_size[i] -= sum(spike_sides[3-i::-2])*spike_height
-    
-    for side in range(4):
-        nodes.append(spikey_size*helper[side])
- 
-        if spike_sides[side]:
-            spike_num = int(2.0*spikey_size[(side)%2]/approx_spike_size/2.0)*2 +1
 
-            half_spike = (spikey_size[side%2]*2.0)/(float(spike_num)*2.0-2.0)
-            direction = (helper[side+1]-helper[side])
-            step = half_spike*direction # move across this side in this direction
-            add_spike = spike_height*np.array([direction[1],-direction[0]]) # way spikes jut out
-            for k in range(1,spike_num):
-                nodes.append(spikey_size*helper[side]+step*k+(k%2)*add_spike)
-        
-    return [tuple(n) for n in nodes]
-    
 
 ##### Classes           ################################################################
 
@@ -120,7 +97,7 @@ class Player(Body):
         self.jump_recency = 0
         self.animate = 0
         
-        self.shift_path = [np.array([player_size[0]*0.05*math.cos(2.0*i*math.pi/animate_length),player_size[0]*0.1*math.sin(4.0*i*math.pi/animate_length)], dtype ='float' )for i in range(animate_length)]
+        self.shift_path = animate_path(player_size[0]*np.array([0.05,0.1]), [2.0,4.0],animate_length) 
         
         # hitbox for attack
         self.attack_box = Body([0,0],player_size*attack_fraction,solid=False)

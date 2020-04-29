@@ -1,7 +1,7 @@
 import copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
-from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color
+from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color, rect
 from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, countdown_sound
 from Boomer import Boomer
 
@@ -49,11 +49,7 @@ def n_shape(s=1,shift=[0,0],transform = identitymat,color=(0,0,0),line_color=Non
     n_shp.shift(shift)
     return n_shp
 
-def rect(size,shift=[0,0]):
-        return [(-size[0]+shift[0],-size[1]+shift[1]),(-size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],size[1]+shift[1]),(size[0]+shift[0],-size[1]+shift[1])]
 
-
-    
                     
 def resolve_fall(bod,bod2): #resolving fall for non-character objects
     if bod2.solid and bod2.pos[1]>bod.pos[1]: # bod 2 is below and solid
@@ -135,8 +131,8 @@ class Bounce_Box(Box):
             
             # edge cases where box must break when hit from below
             if bounce and side == 1:
-                # player on a solid object and hitting underside or pressed jump this round (effectively a squeeze)
-                if isinstance(player.resting_on,Body) or ((player.jump_recency == player.jump_anticipation) and (player.jumping > 0)):
+                # player on a solid object and hitting underside 
+                if isinstance(player.resting_on,Body):
                     break_box = True
                     bounce = False # no need to bounce
                     player.jumping = 0 # no longer jumping, buddy
