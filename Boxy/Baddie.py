@@ -10,7 +10,7 @@ from Make_Sounds import fruit_sound
 
 owl_speed = 4
 owl_size = box_size*np.array([0.8,0.5])
-owl_color = (180,160,130)
+owl_color = (145,60,150)
 
 
 ##### Useful Functions  ################################################################

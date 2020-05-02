@@ -4,7 +4,7 @@ from Super_Classes import Body, Shape, Vector
 from Box import Box
 import math
 import copy # remove this when you get a chance, it's inefficient
-from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color, animate_path, spikey_box
+from Constants import G, box_size, S, character_color, protector_color, protector_line_color, protector_size, eye_color, attack_color, animate_path, spikey_box
 
 from Make_Sounds import slide_sound, ouch_sound, power_down_sound, protection_sound, footstep_sound
 
@@ -34,8 +34,6 @@ animate_length = 100
 attack_duration = 10
 attack_fraction = np.array([1.2,1.1],dtype='float')
 
-
-attack_color = (160,160,160)
 
 
 crouch_fraction = 0.7

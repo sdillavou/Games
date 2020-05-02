@@ -23,7 +23,7 @@ class Level:
 
         self.ticker = -1
         
-        if num == 0:
+        if num == 1:
 
             self.scenery = []
             #self.background_list = []
