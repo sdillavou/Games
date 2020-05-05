@@ -1,6 +1,6 @@
 import pygame
 
-class Keyboard:
+class Game_Keyboard:
 
     # set keys to false
     def __init__(self):
@@ -25,7 +25,7 @@ class Keyboard:
     
     
     # take event as input, change keys as required
-    def handle_in_game_events(self,event_list):
+    def handle_keys(self,event_list):
 
         # these flags only true if pressed in this frame
         self.jump_key = False
@@ -75,3 +75,64 @@ class Keyboard:
 
                 
     
+
+class Build_Keyboard:
+
+    # set keys to false
+    def __init__(self):
+
+        self.reset()
+        
+    def reset(self):
+        self.left_key = False
+        self.right_key = False
+        self.up_key = False
+        self.down_key = False
+        self.click = False
+        
+        self.crashed = False
+        
+    
+    
+    # take event as input, change keys as required
+    def handle_keys(self,event_list):
+
+        # these flags only true if pressed in this frame
+        self.left_key = False
+        self.right_key = False
+        self.up_key = False
+        self.down_key = False
+        self.click = False
+        self.crashed = False
+
+        # handle each individual event
+        for event in event_list: 
+            if event.type == pygame.KEYDOWN:
+                
+                # arrow keys
+                if event.key == pygame.K_LEFT:
+                    self.left_key = True
+                elif event.key == pygame.K_RIGHT:
+                    self.right_key = True
+                elif event.key == pygame.K_UP:
+                    self.up_key = True
+                elif event.key == pygame.K_DOWN:
+                    self.down_key = True
+                    
+                #WASD also work
+                elif event.key == pygame.K_a:
+                    self.left_key = True
+                elif event.key == pygame.K_d:
+                    self.right_key = True
+                elif event.key == pygame.K_w:
+                    self.up_key = True
+                elif event.key == pygame.K_s:
+                    self.down_key = True
+
+                elif event.key == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1: # not mouse wheel
+                        self.click = True
+                
+
+           # elif event.type == pygame.KEYUP:
+             
