@@ -2,15 +2,17 @@ from Gettables import Fruit
 import Box
 import pygame
 from Constants import character_color, display_size, S
+from os import path
 
+filepath = path.join(path.dirname(__file__), '')
 
 ##### Useful Identities ################################################################
 
 icon_size = 18*S 
 icon_spacing = 8*icon_size
 display_height = icon_size*1.5
-font = pygame.font.Font('freesansbold.ttf', int(icon_size*1.7))
-font2 = pygame.font.Font('freesansbold.ttf', int(icon_size*0.8))
+font = pygame.font.SysFont(filepath+'freesansbold.ttf', int(icon_size*1.7))
+font2 = pygame.font.SysFont(filepath+'freesansbold.ttf', int(icon_size*0.8))
 black = (0,0,0)
 gray = (150,150,150)
 

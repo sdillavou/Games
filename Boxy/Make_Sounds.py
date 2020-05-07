@@ -1,44 +1,44 @@
 import pygame
 from random import randint
+from os import path
 
 
+filepath = path.join(path.dirname(__file__), '')
 
 #wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
 #wood_bounce = pygame.mixer.Sound('sounds/bounce.wav')
 #wood_bounce.set_volume(0.4)
 #wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
-wood_bounce2 = pygame.mixer.Sound('sounds/bounce.flac')
-wood_bounce2.set_volume(0.3)
 
-boom = pygame.mixer.Sound('sounds/boom.wav')
+boom = pygame.mixer.Sound(filepath+'boom.wav')
 
-protection = pygame.mixer.Sound('sounds/protection.wav')
+protection = pygame.mixer.Sound(filepath+'protection.wav')
 
 #wood_break = pygame.mixer.Sound('sounds/wood_bounce.wav')
 #wood_break.set_volume(0.5)
-slide = pygame.mixer.Sound('sounds/slide.wav')
+slide = pygame.mixer.Sound(filepath+'slide.wav')
 slide.set_volume(0.15)
 
-tnt_sound = pygame.mixer.Sound('sounds/tnt_sound2.wav')
+tnt_sound = pygame.mixer.Sound(filepath+'tnt_sound2.wav')
 tnt_sound.set_volume(0.5)
 
-blip = pygame.mixer.Sound('sounds/blip.wav')
+blip = pygame.mixer.Sound(filepath+'blip.wav')
 blip.set_volume(0.4)
 
-ouch = pygame.mixer.Sound('sounds/ouch.wav')
+ouch = pygame.mixer.Sound(filepath+'ouch.wav')
 ouch.set_volume(0.7)
 
-footstep = pygame.mixer.Sound('sounds/footstep.wav')
+footstep = pygame.mixer.Sound(filepath+'footstep.wav')
 footstep.set_volume(0.7)
 
-power_down = pygame.mixer.Sound('sounds/power_down.wav')
+power_down = pygame.mixer.Sound(filepath+'power_down.wav')
 #power_down.set_volume(0.15)
 
 
-thud = pygame.mixer.Sound('sounds/thud.wav')
+thud = pygame.mixer.Sound(filepath+'thud.wav')
 
 
-wood_break= [pygame.mixer.Sound('sounds/box_break'+str(i)+'.wav') for i in range(7)]
+wood_break= [pygame.mixer.Sound(filepath+'box_break'+str(i)+'.wav') for i in range(7)]
 for i in wood_break:
     i.set_volume(0.3)
 

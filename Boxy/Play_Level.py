@@ -12,13 +12,16 @@ from Constants import display_size, spikey_box, attack_color, character_color,ey
 from Level import Level
 from Make_Sounds import ouch_sound, thud_sound
 
+from os import path
+
+filepath = path.join(path.dirname(__file__), '')
 
 
 ## Define pause menu shapes and font
 pause_menu = Body(np.array(display_size)/2,np.array(display_size)/4)
 pause_menu.shapes.append(Shape(spikey_box([pause_menu.size[0]+display_size[1]/50,pause_menu.size[1]+display_size[1]/50]),color = attack_color,line_color = (0,0,0),line_width = 10)) 
 pause_menu.shapes.append(Shape(pause_menu.self_shape(),color = character_color,line_color = None,line_width = 10))
-font = pygame.font.SysFont('freesansbold.ttf', int(pause_menu.size[1]*0.8))
+font = pygame.font.SysFont(filepath+'freesansbold.ttf', int(pause_menu.size[1]*0.8))
 text = font.render('PAUSED', True, eye_color, None)
 textRect = text.get_rect()  
 textRect.center = ([i/2 for i in display_size])
