@@ -50,6 +50,15 @@ def n_shape(s=1,shift=[0,0],transform = identitymat,color=(0,0,0),line_color=Non
     return n_shp
 
 
+# outputs nodes for C, given a scale
+def c_shape(s=1,shift=[0,0],transform = identitymat,color=(0,0,0),line_color=None):
+    shp = [tuple((i+j) for i,j in zip(shift,node)) for node in [(3*s/4, 3*s/4),(-3*s/4, 3*s/4), (-3*s/4, -3*s/4), (3*s/4, -3*s/4), (3*s/4, -s/4), (-s/4, -s/4), (-s/4, s/4), (3*s/4, s/4)]]
+    n_shp = Shape(shp,color = color,line_color = line_color,z = 1)
+    n_shp.transform(transform)
+    n_shp.shift(shift)
+    return n_shp
+
+
                     
 def resolve_fall(bod,bod2): #resolving fall for non-character objects
     if bod2.solid and bod2.pos[1]>bod.pos[1]: # bod 2 is below and solid
@@ -414,12 +423,27 @@ class Life(Wood):
         self.fruit = 0 # no fruit inside  
         self.lives = 1
             
+
+
+# Class for wooden boxes that are checkpoints
+class Checkpoint(Wood):
+    
+    destruct_scale = 0.993 # letter slowly shrinks for a long time after destruction
+    destruct_length = 360
+        
+    # Initialize protection wood box
+    def __init__(self,position,floating=False):
+        super().__init__(position,floating=floating)   
+        self.shapes = self.shapes[0:1]
+        self.shapes.append(c_shape(self.size[0],[0,0],[[8/12,0],[0,10/12]],tnt_letter_color,None)) # add c to front of box
+        self.fruit = 0
+            
    
         
         
 #### Builder function ########################################################################
 
-box_dict = {'metal':Metal, 'wood':Wood, 'metal_wood':Metal_Wood, 'tnt':Tnt, 'nitro':Nitro, 'bouncey_wood':Bouncey_Wood, 'protection':Protection, 'life':Life}
+box_dict = {'metal':Metal, 'wood':Wood, 'metal_wood':Metal_Wood, 'tnt':Tnt, 'nitro':Nitro, 'bouncey_wood':Bouncey_Wood, 'protection':Protection, 'life':Life, 'checkpoint':Checkpoint}
 
 def create_box(box_type,position,floating = False):
     return box_dict[box_type](position,floating)

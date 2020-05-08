@@ -66,16 +66,31 @@ class Player(Body):
 # Class for main character  
 
     flop_stun = flop_stun
-
-###############################################################################################
-    def __init__(self,position):
-        super().__init__(position,player_size,corporeal=True,solid=True,velocity=[0,0])  
-        self.crouching = False
+    
+    # status of the player is N-E-U-tral
+    def reset(self):
+        
+        if self.crouching:
+            self.uncrouch()    
         self.sliding = 0
         self.attacking = 0
         self.flopping = 0
         self.jumping = 0
         self.out_of_crouch = False
+        self.direction = 1.0
+        self.invulnerable = 0
+        self.protection = 0
+        self.vel *= 0
+        self.jump_recency = 0
+        self.animate = 0
+        self.is_off()
+
+###############################################################################################
+    def __init__(self,position):
+        super().__init__(position,player_size,corporeal=True,solid=True,velocity=[0,0])  
+        self.crouching = False
+        self.reset()
+        
         self.shape_dict={'body':Shape(self.self_shape([0.95,0.9]),character_color,line_color = None,line_width = None)}
         self.shape_dict['body'].shift([0,-self.size[1]*0.1])
         self.shape_dict['legs'] = Shape(self.self_shape([0.9,0.01]),legs_color,line_color = None,line_width = None)
@@ -110,9 +125,6 @@ class Player(Body):
         self.flop_box = Body([0,0],player_size*np.array([flop_width,crouch_fraction],dtype='float'),solid=False)
         self.flop_box.shapes.append(Shape(spikey_box(self.flop_box.size,[0,0,1,0]),color = attack_color,line_color = None)) # add outline
         
-        self.direction = 1.0
-        self.invulnerable = 0
-        self.protection = 0
         
         self.protector = Protector(self.pos - self.size*[self.direction,1.0])
         
@@ -289,10 +301,7 @@ class Player(Body):
 
         if self.crouching:
             if not crouch_key or is_airborne or is_attacking: # if key released or in the air, or attacking, uncrouch
-                self.pos[1] -= np.matmul(self.transform,self.size)[1]*(1-crouch_fraction)
-               # self.transform[0][:] *= 0.8
-                self.transform[1][:] *= (1/crouch_fraction)
-                self.crouching = False
+                self.uncrouch()
                 if not crouch_key and not is_airborne: # if uncrouch by releasing key or attack start
                     self.out_of_crouch = True #note this release
 
@@ -339,11 +348,16 @@ class Player(Body):
             self.sliding = slide_duration # 10 frames of sliding!
             slide_sound() # play that sound!
             self.vel[0] = slide_speed*run_key
-       
+    
+    def uncrouch(self):
+        self.pos[1] -= np.matmul(self.transform,self.size)[1]*(1-crouch_fraction)
+       # self.transform[0][:] *= 0.8
+        self.transform[1][:] *= (1/crouch_fraction)
+        self.crouching = False
+
         
     def flop(self):
         self.crouch()
-        #self.transform[1][:] *= crouch_fraction
         #self.pos[1] -= np.matmul(self.transform,self.size)[1] # gain a little height (top of head stays the same)
         self.vel = np.array([0,flop_bounce],dtype='float') # stop moving horizontally, small bump vertically
         self.flopping = self.flop_stun
@@ -357,8 +371,7 @@ class Player(Body):
         if self.crouching: # note that the player just left crouch
             self.out_of_crouch = True
         
-
-
+   
 ####### external use, not used in evolve() #####
 
     def bounce(self,side):
@@ -369,6 +382,7 @@ class Player(Body):
                 ## ADD STRENGTH WHEN JUMPING ON SPRING BLOCK. DO JUST REGULAR JUMP WHEN BOUNCING ON SPRING BLOCK
             else:
                 if side == 1:
+                    self.jumping = 0 # can't hover m'boy!
                     self.vel[1] = min(bounce_strength,-self.vel[1]) # do not bounce down harder than collision was
                 else: # side == -1
                     self.vel[1] = side*bounce_strength

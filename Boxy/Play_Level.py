@@ -25,12 +25,14 @@ font = pygame.font.SysFont(filepath+'freesansbold.ttf', int(pause_menu.size[1]*0
 text = font.render('PAUSED', True, eye_color, None)
 textRect = text.get_rect()  
 textRect.center = ([i/2 for i in display_size])
+text2 = font.render('GAME OVER', True, eye_color, None)
+textRect2 = text2.get_rect()  
+textRect2.center = ([i/2 for i in display_size])
+
 
 
 def play_level(num,keyboard,gameDisplay,clock):
     
-   
-
 
     # Object holding all level Bodies and scenery
     level = Level(num) # right now level 0
@@ -42,21 +44,27 @@ def play_level(num,keyboard,gameDisplay,clock):
     #level.background_list.append(screen2)
 
     death_delay = 60 # time after player's death that the level keeps tickin'
-    crashed = death_delay # start with a completed crash cycle to initalize everything
+    crashed = 0 # start with a completed crash cycle to initalize everything
     paused = False
-
-
-    while True: # play the game
+    
+    # generate character
+    character = Player(level.player_start)
+    crashed = 0
+    level.reset()
+    character.current_status = Status(lives = 1, fruit = 0, boxes = 0) # arbitrary start for now
+    
+    game_over = False
+    while not game_over: # play the game
         
         
     ##############################################################################
-        # Note keyboard inputs and store them (including killing player by quitting)
+        # Note keyboard inputs and store them (including pausing)
 
         keyboard.handle_keys(pygame.event.get())
 
-        if keyboard.crashed: # toggle pause
+        if keyboard.paused: # toggle pause
             paused = not paused
-            keyboard.crashed = False
+            keyboard.paused = False
             if paused:
                 pause_menu.draw(gameDisplay)
                 gameDisplay.blit(text, textRect) 
@@ -69,17 +77,31 @@ def play_level(num,keyboard,gameDisplay,clock):
 
             if crashed or character.pos[1]>(1.5*display_size[1]): # player off screen = dead!
                 if crashed == death_delay:
-                    character = Player(level.player_start)
+                    # reset crash-o-meter
                     crashed = 0
+                    
+                    # restore everything since last checkpoint
                     level.reset()
-                    character.current_status = Status(lives = 14, fruit = 85, boxes = 0) # arbitrary start for now
+                    
+                    # reset character's state, position, box count, and decrease lives
+                    character.reset()
+                    character.pos = level.player_start*1.0 # gotta copy.
+                    character.current_status.counters['boxes'] = level.boxes_killed
+                    
+                        
+                    # reset keyboard
                     keyboard.reset()
+                    
                 else:    
                     crashed += 1
 
                 if crashed == 2: # just died, play ouch sound!
                     ouch_sound()
-
+                    if character.current_status.counters['lives'] == 0:
+                        game_over = True
+                    else:
+                        character.current_status.counters['lives'] -=1
+                   
 
 
         ##############################################################################    
@@ -110,16 +132,21 @@ def play_level(num,keyboard,gameDisplay,clock):
                     crashed = 1
 
 
-
         ##############################################################################
             # Prepare canvas and draw visuals
 
+            
             # fill display with sky color and set center position for screen (only overlapping objects will draw)
             gameDisplay.fill(level.sky)
             screen.pos = np.array([character.pos[0],display_size[1]/2]) # location of the center of the screen
 
             # move all non-corporeal objects to the foreground, draw all bodies, and clean foreground list of dead objects
             level.draw_level(gameDisplay,screen,character)
+            
+            # game over!
+            if game_over:
+                pause_menu.draw(gameDisplay)
+                gameDisplay.blit(text2, textRect2) 
 
       #  sleep(0.1) # turned on for debugging
         pygame.display.update()

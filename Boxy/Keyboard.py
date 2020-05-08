@@ -19,7 +19,7 @@ class Game_Keyboard:
 
         self.attack_key = False #instantaneous
         
-        self.crashed = False
+        self.paused = False
         
     
     
@@ -54,10 +54,10 @@ class Game_Keyboard:
                     self.attack_key = True
 
                 elif event.key == pygame.K_q:
-                    self.crashed = True
+                    self.paused = True
                     
                 elif event.key == pygame.K_p:
-                    self.crashed = True
+                    self.paused = True
 
             elif event.type == pygame.KEYUP:
                 
@@ -90,7 +90,7 @@ class Build_Keyboard:
         self.down_key = False
         self.click = False
         
-        self.crashed = False
+        self.paused = False
         
     
     
@@ -103,7 +103,7 @@ class Build_Keyboard:
         self.up_key = False
         self.down_key = False
         self.click = False
-        self.crashed = False
+        self.paused = False
 
         # handle each individual event
         for event in event_list: 

@@ -11,8 +11,8 @@ filepath = path.join(path.dirname(__file__), '')
 icon_size = 18*S 
 icon_spacing = 8*icon_size
 display_height = icon_size*1.5
-font = pygame.font.SysFont(filepath+'freesansbold.ttf', int(icon_size*1.7))
-font2 = pygame.font.SysFont(filepath+'freesansbold.ttf', int(icon_size*0.8))
+font = pygame.font.SysFont(filepath+'freesansbold.ttf', int(icon_size*2.5))
+font2 = pygame.font.SysFont(filepath+'freesansbold.ttf', int(icon_size*1.0))
 black = (0,0,0)
 gray = (150,150,150)
 

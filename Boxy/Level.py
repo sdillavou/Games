@@ -45,8 +45,10 @@ class Level:
         self.baddie_list = []
         self.master_baddie_list = []
         
+        self.boxes_killed = 0
+        
         # default starting position
-        self.player_start = [0,floor-300*S]
+        self.player_start = np.array([0,floor-300*S],dtype=float)
 
         if num == 0:
             pass
@@ -54,7 +56,7 @@ class Level:
             
         elif num == 1:
 
-            self.player_start = [200*S,floor-300*S]
+            self.player_start = np.array([200*S,floor-300*S],dtype=float)
             
             for k in range(3):
                 self.add_box('metal',[17+k,0])
@@ -70,7 +72,7 @@ class Level:
             self.add_box('metal',[3,1])
             self.add_box('nitro',[2,4],True)
             
-            self.add_box('wood',[12,1],True)
+            self.add_box('checkpoint',[12,1],True)
             self.add_box('wood',[15,1],True)
             self.add_box('bouncey_wood',[16,2],True)
             self.add_box('bouncey_wood',[16,3])
@@ -101,7 +103,6 @@ class Level:
         
     # Reset the level by copying master lists and clearing the foreground, then letting objects settle   
     def reset(self):
-        
         # set all appropriate lists
         self.platform_list = copy.deepcopy(self.master_platform_list)
         self.box_list = copy.deepcopy(self.master_box_list)
@@ -112,7 +113,13 @@ class Level:
 
         # let objects find what they're resting on
         self.move_objects(land_sound_flag=False) # silently let things find their place before the curtain rises
-        
+    
+    def level_set(self):
+        self.master_platform_list = copy.deepcopy(self.platform_list)
+        self.master_box_list = copy.deepcopy(self.box_list)
+        self.master_gettable_list = copy.deepcopy(self.gettable_list)
+        self.master_baddie_list = copy.deepcopy(self.baddie_list)
+
         
     # Move all objects in level (everything but player and protector). Falling solid bodies can find new resting spots. 
     def move_objects(self,land_sound_flag=True):
@@ -156,12 +163,46 @@ class Level:
             if bod.destruct_counter==0: #completely destroyed!
                 self.foreground_list.remove(bod)
     
-        # move all non-corporeal objects to the foreground
+        # move all non-corporeal objects to the foreground, deal with new checkpoints!
         for body_list in [self.box_list, self.gettable_list, self.baddie_list]:
             for bod in body_list[::-1]: # need to go in reverse else removal of two objects doesn't work
                 if not bod.corporeal:
                     body_list.remove(bod)
                     self.foreground_list.append(bod)
+                    
+                    # if this is a checkpoint box, player now is spawned here.
+                    if isinstance(bod,Box.Checkpoint):
+                        self.player_start = np.array(bod.pos,dtype=float) + [0,-box_size]
+                        self.level_set() # destroyed stuff is destroyed... forever!
+                        self.boxes_killed = character.current_status.counters['boxes']
+                       
+                    # lives can only be got once
+                    if isinstance(bod,Gettables.Life) or isinstance(bod,Box.Life):
+                     
+                        # search for copy in appropriate master list
+                        if isinstance(bod,Gettables.Life):
+                            master_list = self.master_gettable_list
+                            swap_box = False
+                        else:
+                            master_list = self.master_box_list
+                            swap_box = True
+                         
+                        # find closest equivalent object in that master list
+                        min_dist = np.inf    
+                        for bod2 in master_list:
+                            if type(bod) == type(bod2):
+                                dist = np.linalg.norm(bod2.pos-bod.pos)
+                                if dist<min_dist:
+                                    same_obj = bod2
+                                    min_dist = dist
+                        
+                        # remove it!
+                        master_list.remove(same_obj)
+                        
+                        # if it's a box replace it with a regular wooden box
+                        if swap_box:
+                            self.master_box_list.append(Box.create_box('wood',1.0*same_obj.pos,same_obj.floating))
+                            
 
         # draw scenery (special rules for when they overlap with screen)
         for bod in self.scenery:
@@ -233,7 +274,7 @@ class Level:
         
         position[1]*=-1.0
         pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor-box_size]
-        self.master_box_list.append(Gettables.create_get(get_type,pos))
+        self.master_gettable_list.append(Gettables.create_get(get_type,pos))
         
     # Add platform to the level, position is scaled by box_size*2. Height is floor.
     def add_floor(self,start,stop,color=platform_color,line_color = (0,0,0),line_width=2): 
