@@ -37,11 +37,11 @@
   ('pyi_rth_multiprocessing',
    '/Users/Sam/anaconda3/lib/python3.7/site-packages/PyInstaller/loader/rthooks/pyi_rth_multiprocessing.py',
    'PYSOURCE'),
-  ('run', '/Users/Sam/Documents/GitHub/Games/Boxy/run.py', 'PYSOURCE')],
+  ('run', '/Users/Sam/Documents/GitHub/Games/Boxy/run.pyw', 'PYSOURCE')],
  [],
  False,
  False,
- 1588874680,
+ 1588964758,
  [('run',
    '/Users/Sam/anaconda3/lib/python3.7/site-packages/PyInstaller/bootloader/Darwin-64bit/run',
    'EXECUTABLE')])

@@ -125,9 +125,16 @@ class Body(Vector):
     
     # recursively shift all objects that are resting on this one
     def recursive_shift(self,vel):
-        self.pos += vel
-        for obj in self.on_me: # move objects sitting on this object with it
-            obj.recursive_shift(vel)
+        # for all unique objects (no double counting) resting on this one
+        for obj in set(self.recursive_obj_list()):
+            obj.pos += vel
+        
+            
+    def recursive_obj_list(self):
+        out = [self]
+        for obj in self.on_me:
+            out += obj.recursive_obj_list()
+        return out
        
     # shifts all SHAPES that are in this object
     def visual_shift(self,vel):

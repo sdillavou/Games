@@ -1,8 +1,8 @@
 import copy, numpy as np
 from random import randint
 from Super_Classes import Body, Shape
-from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color, rect
-from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, countdown_sound
+from Constants import box_size, G, protector_color, protector_line_color, protector_size, eye_color, rect, character_color
+from Make_Sounds import wood_bounce_sound, wood_break_sound, boom_sound, countdown_sound, life_sound
 from Boomer import Boomer
 
 
@@ -129,13 +129,11 @@ class Bounce_Box(Box):
             # box breaks if last allowable bounce or it is falling
             break_box = (bounce and (self.bounces == 0 or self.vel[1]>0)) 
             
-            # edge cases where box must break when hit from below
-            if bounce and side == 1:
-                # player on a solid object and hitting underside 
-                if isinstance(player.resting_on,Body):
-                    break_box = True
-                    bounce = False # no need to bounce
-                    player.jumping = 0 # no longer jumping, buddy
+            # edge cases where box must break: player on a solid object and hitting underside 
+            if side == 1 and isinstance(player.resting_on,Body):
+                break_box = True
+                bounce = False # no need to bounce
+                player.jumping = 0 # no longer jumping, buddy
                     
             return break_box, bounce*side # return side if bouncing
         
@@ -399,9 +397,29 @@ class Protection(Wood):
             self.player.get_protection()# add protection from breaking this box 
         Wood.destroy(self,get_goodies) # get fruit (0) and box
         
+
+########################################################################################
+           
+# Class for wooden boxes that contain a life
+class Life(Wood):
+    # Initialize protection wood box
+    def __init__(self,position,floating=False):
+        super().__init__(position,floating=floating)   
+        self.shapes.append(Shape(self.self_shape(protector_size/box_size),protector_line_color,None,line_width = 2)) 
+        self.shapes.append(Shape(self.self_shape(0.9*protector_size/box_size),character_color,None,line_width = 2)) 
+        self.shapes.append(Shape(self.self_shape([0.1,0.1]*protector_size/box_size),eye_color,None,line_width = 2))
+        self.shapes[-1].shift(self.size*[0.3,-0.3]*protector_size/box_size) # eye facing one way
+        self.shapes.append(Shape(self.self_shape([0.1,0.1]*protector_size/box_size),eye_color,None,line_width = 2)) 
+        self.shapes[-1].shift(self.size*[-0.3,-0.3]*protector_size/box_size) # eye facing the other way
+        self.fruit = 0 # no fruit inside  
+        self.lives = 1
+            
+   
+        
+        
 #### Builder function ########################################################################
 
-box_dict = {'metal':Metal, 'wood':Wood, 'metal_wood':Metal_Wood, 'tnt':Tnt, 'nitro':Nitro, 'bouncey_wood':Bouncey_Wood, 'protection':Protection}
+box_dict = {'metal':Metal, 'wood':Wood, 'metal_wood':Metal_Wood, 'tnt':Tnt, 'nitro':Nitro, 'bouncey_wood':Bouncey_Wood, 'protection':Protection, 'life':Life}
 
 def create_box(box_type,position,floating = False):
     return box_dict[box_type](position,floating)

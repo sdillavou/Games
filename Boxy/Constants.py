@@ -7,6 +7,7 @@ S = float(S) # doubly sure... heh
 
 G = 0.9*S # strength of gravity
 box_size = 30*S
+gettable_size = 10*S
 
 character_color = (31, 61, 12)
 display_size = (int(720*S),int(405*S)) # 16:9 ratio

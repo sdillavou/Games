@@ -1,13 +1,15 @@
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 import pygame
 if False:
+    # These must be spcified for pyinstaller for some reason.
     import pygame._view
+    import numpy.random.common
+    import numpy.random.bounded_integers
+    import numpy.random.entropy
 
-# These must be spcified for pyinstaller for some reason.
-import numpy.random.common
-import numpy.random.bounded_integers
-import numpy.random.entropy
-
-pygame.init()
+pygame.init();
 
 # Custom classes and functions
 from Constants import display_size

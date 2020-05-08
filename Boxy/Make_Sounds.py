@@ -8,7 +8,7 @@ filepath = path.join(path.dirname(__file__), '')
 #wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
 #wood_bounce = pygame.mixer.Sound('sounds/bounce.wav')
 #wood_bounce.set_volume(0.4)
-#wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
+wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
 
 boom = pygame.mixer.Sound(filepath+'boom.wav')
 
@@ -42,8 +42,11 @@ wood_break= [pygame.mixer.Sound(filepath+'box_break'+str(i)+'.wav') for i in ran
 for i in wood_break:
     i.set_volume(0.3)
 
+def life_sound():
+    pass
+    
 def wood_bounce_sound():
-    pygame.mixer.Sound.play(wood_bounce2)
+    pygame.mixer.Sound.play(wood_bounce)
     
 def boom_sound():
     pygame.mixer.Sound.play(boom)

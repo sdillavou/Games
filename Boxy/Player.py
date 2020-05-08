@@ -37,7 +37,6 @@ attack_fraction = np.array([1.2,1.1],dtype='float')
 
 
 crouch_fraction = 0.7
-crouch_release_vel = -0.0001
 
 flop_stun = 20
 flop_bounce = -5.0*G**2/S/0.8**2
@@ -76,6 +75,7 @@ class Player(Body):
         self.attacking = 0
         self.flopping = 0
         self.jumping = 0
+        self.out_of_crouch = False
         self.shape_dict={'body':Shape(self.self_shape([0.95,0.9]),character_color,line_color = None,line_width = None)}
         self.shape_dict['body'].shift([0,-self.size[1]*0.1])
         self.shape_dict['legs'] = Shape(self.self_shape([0.9,0.01]),legs_color,line_color = None,line_width = None)
@@ -254,6 +254,9 @@ class Player(Body):
         
     ######### EVOLVE COUNTERS AND JUMP ############################
         
+        # default is false
+        self.out_of_crouch = False
+        
         # if flopping, that's all that's going on
         if self.flopping>0:    
             if not is_airborne:
@@ -284,18 +287,14 @@ class Player(Body):
         
     ######### CROUCH/FLOP ########################################
 
-        # if not sliding or flopping or jumping, you can move!
         if self.crouching:
             if not crouch_key or is_airborne or is_attacking: # if key released or in the air, or attacking, uncrouch
                 self.pos[1] -= np.matmul(self.transform,self.size)[1]*(1-crouch_fraction)
                # self.transform[0][:] *= 0.8
                 self.transform[1][:] *= (1/crouch_fraction)
                 self.crouching = False
-                
-
-                if not is_airborne: # if coming out of a crouch, give a small velocity to break boxes
-                    if self.vel[1]>=0:
-                        self.vel[1] = crouch_release_vel 
+                if not crouch_key and not is_airborne: # if uncrouch by releasing key or attack start
+                    self.out_of_crouch = True #note this release
 
         else: # if uncrouched 
             if not is_attacking and crouch_key and not is_airborne: # crouch key pressed and on the ground and not attacking
@@ -309,6 +308,7 @@ class Player(Body):
 
             
     ######### MOVEMENT ###########################################
+        # if not sliding or flopping or jumping, you can move!
     
         if is_airborne: # if airborne control is weak
             if is_decelerating:
@@ -354,13 +354,15 @@ class Player(Body):
         self.is_off() # no longer standing on an object
         self.sliding = 0 # cancels slides 
         self.jumping = jump_key_relevance
+        if self.crouching: # note that the player just left crouch
+            self.out_of_crouch = True
         
 
 
 ####### external use, not used in evolve() #####
 
     def bounce(self,side):
-        if self.vel[1] != crouch_release_vel: # if not just released from a crouch (this causes squeezing)
+        if not self.out_of_crouch: # if not just released from a crouch (this causes squeezing)
             if self.jump_recency>0 and side == -1:
                 self.jumping = bounce_jump_key_relevance
                 self.vel[1] = side*bounce_strength 

@@ -4,9 +4,8 @@ import math, copy, numpy as np
 from random import randint
 
 # Custom 
-import Box, Platform, Baddie
-from Gettables import Fruit
-from Constants import box_size, S, floor,display_size, G, platform_color, sky
+import Box, Platform, Baddie, Gettables
+from Constants import box_size, S, floor,display_size, G, platform_color, sky, gettable_size
 from Boomer import Boomer
 from Make_Sounds import thud_sound
 
@@ -38,45 +37,27 @@ class Level:
         self.scenery = []
         self.add_scenery('clouds')
         
-        if num == 0:
+        self.foreground_list = [] 
+        self.master_platform_list = []
+        self.master_box_list = []
+        self.background_list = []
+        self.master_gettable_list = []
+        self.baddie_list = []
+        self.master_baddie_list = []
         
-            self.background_list = []
-            self.master_platform_list = []
-            self.master_box_list = []
-            self.foreground_list = [] 
-            self.master_gettable_list = []
-            self.player_start = [0,floor-300*S]
-            self.baddie_list = []
-            self.master_baddie_list = []
-            
+        # default starting position
+        self.player_start = [0,floor-300*S]
+
+        if num == 0:
+            pass
+          
             
         elif num == 1:
 
-            self.foreground_list = [] 
-
-
-            R = box_size*4
-            N = 600
-            path = [np.array([500*S + R*math.cos(2*math.pi*x/N),floor + R*math.sin(2*math.pi*x/N)]) for x in range(N)]
-            d1 = Platform.Moving_Platform([box_size*2,box_size/3],copy.copy(path),color=(50,50,50),line_color = None ,line_width = 2)
-            d2 = Platform.Moving_Platform([box_size*2,box_size/3],path[int(N/2):]+path[:int(N/2)],color=(50,50,50),line_color = (0,0,0) ,line_width = 2)
-           
-
-            p0 = Platform.Platform(*[[500*S,floor],[10*S,10*S]])
-            p0.solid = False
-            p0.corporeal = False
-
-
+            self.player_start = [200*S,floor-300*S]
             
-         #   f = Fruit(a0.pos - [box_size*2,box_size*8])
-
-
-            self.master_platform_list = [d1,d2]
-            self.master_box_list = []
-            self.background_list = [p0]
-
-            for k in range(10):
-                self.add_box('metal',[25+k,0])
+            for k in range(3):
+                self.add_box('metal',[17+k,0])
                 
             self.add_box('protection',[0,0])
             self.add_box('tnt',[0,3],True)
@@ -89,24 +70,32 @@ class Level:
             self.add_box('metal',[3,1])
             self.add_box('nitro',[2,4],True)
             
+            self.add_box('wood',[12,1],True)
+            self.add_box('wood',[15,1],True)
+            self.add_box('bouncey_wood',[16,2],True)
+            self.add_box('bouncey_wood',[16,3])
+            
+            
+            self.add_box('life',[13,3],True)
+            
+            self.add_get('life',[14,3])
+            self.add_get('protection',[15,3])
+            self.add_get('fruit',[14,4])
+            
             self.add_floor(-1,4)
             self.add_floor(12,20)
                 
-           
+  
+            self.add_rotation_platform([8,0],radius=2,platform_width=1,T=600,color=(50,50,50))
 
-            self.master_gettable_list = []
-
-          #  for k in range(1,10):
-          #      self.master_gettable_list.append(Fruit(a.pos + [600*S+box_size*2*k,-3*2*box_size]))
-
-
-            
-            self.player_start = [200*S,floor-300*S]
-            self.baddie_list = []
-            self.master_baddie_list = []
-            
+         
             
             self.master_baddie_list.append(Baddie.Owl([[box_size*2,box_size*4],[box_size*10,box_size*4]]))
+            self.master_baddie_list.append(Baddie.Owl([[box_size*20,box_size*4],[box_size*12,box_size*4]]))
+
+            
+          #  for k in range(1,10):
+          #      self.master_gettable_list.append(Fruit(a.pos + [600*S+box_size*2*k,-3*2*box_size]))
 
            
         
@@ -237,8 +226,32 @@ class Level:
         
         position[1]*=-1.0
         pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor-box_size]
-        self.master_box_list.append(Box.create_box(box_type,pos,floating))
+        self.master_box_list.append(Box.create_box(box_type,pos,floating))           
+     
+    # Add gettable to the level, position is scaled by box_size*2 and centered at floor+box_size.
+    def add_get(self,get_type,position):
+        
+        position[1]*=-1.0
+        pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor-box_size]
+        self.master_box_list.append(Gettables.create_get(get_type,pos))
         
     # Add platform to the level, position is scaled by box_size*2. Height is floor.
     def add_floor(self,start,stop,color=platform_color,line_color = (0,0,0),line_width=2): 
         self.master_platform_list.append(Platform.Platform([(start+stop)*box_size,floor+50*S],[(stop-start+1)*box_size,50*S],color,line_color,line_width))
+        
+    # Adds two moving platforms that rotate circularly around a specified center point
+    def add_rotation_platform(self,position,radius = 2,platform_width=1,T=600,color=(50,50,50)):
+   
+        height = 10*S
+        R = radius*box_size*2
+        width = platform_width*box_size*2
+        # top will be at same level as floor for position[1] = 0
+        pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor+height] 
+        path = [np.array([pos[0]+ R*math.cos(2*math.pi*x/T),pos[1]+ R*math.sin(2*math.pi*x/T)]) for x in range(T)]
+        self.master_platform_list.append(Platform.Moving_Platform([width,height],copy.copy(path),color=color))
+        self.master_platform_list.append(Platform.Moving_Platform([width,height],path[int(T/2):]+path[:int(T/2)],color=color))
+
+        self.background_list.append(Platform.Platform(pos,[height,height]))
+
+
+        

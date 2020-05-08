@@ -34,7 +34,7 @@
   ('pyi_rth_multiprocessing',
    '/Users/Sam/anaconda3/lib/python3.7/site-packages/PyInstaller/loader/rthooks/pyi_rth_multiprocessing.py',
    'PYSOURCE'),
-  ('run', '/Users/Sam/Documents/GitHub/Games/Boxy/run.py', 'PYSOURCE')],
+  ('run', '/Users/Sam/Documents/GitHub/Games/Boxy/run.pyw', 'PYSOURCE')],
  True,
  False,
  False,
