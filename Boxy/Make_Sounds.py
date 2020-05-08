@@ -5,10 +5,8 @@ from os import path
 
 filepath = path.join(path.dirname(__file__), '')
 
-#wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
-#wood_bounce = pygame.mixer.Sound('sounds/bounce.wav')
-#wood_bounce.set_volume(0.4)
-wood_bounce = pygame.mixer.Sound('wood_bounce.wav')
+
+wood_bounce = pygame.mixer.Sound(filepath+'wood_bounce.wav')
 
 boom = pygame.mixer.Sound(filepath+'boom.wav')
 

@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['run.py'],
+a = Analysis(['run.pyw'],
              pathex=['/Users/Sam/Documents/GitHub/Games/Boxy'],
              binaries=[],
-             datas=[('slide.wav', '.'), ('boom.wav', '.'), ('protection.wav', '.'), ('tnt_sound2.wav', '.'), ('blip.wav', '.'), ('ouch.wav', '.'), ('footstep.wav', '.'), ('power_down.wav', '.'), ('thud.wav', '.'), ('box_break0.wav', '.'), ('box_break1.wav', '.'), ('box_break2.wav', '.'), ('box_break3.wav', '.'), ('box_break4.wav', '.'), ('box_break5.wav', '.'), ('box_break6.wav', '.'), ('freesansbold.ttf', '.')],
+             datas=[('slide.wav', '.'), ('boom.wav', '.'), ('protection.wav', '.'), ('tnt_sound2.wav', '.'), ('blip.wav', '.'), ('ouch.wav', '.'), ('footstep.wav', '.'), ('power_down.wav', '.'), ('thud.wav', '.'), ('box_break0.wav', '.'), ('box_break1.wav', '.'), ('box_break2.wav', '.'), ('box_break3.wav', '.'), ('box_break4.wav', '.'), ('box_break5.wav', '.'), ('box_break6.wav', '.'), ('freesansbold.ttf', '.'),('wood_bounce.wav', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

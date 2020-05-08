@@ -6,7 +6,6 @@ import numpy as np
 
 # Custom classes and functions
 from Super_Classes import Body, Shape
-from Status import Status
 from Player import Player
 from Constants import display_size, spikey_box, attack_color, character_color,eye_color
 from Level import Level
@@ -31,7 +30,7 @@ textRect2.center = ([i/2 for i in display_size])
 
 
 
-def play_level(num,keyboard,gameDisplay,clock):
+def play_level(num,keyboard,gameDisplay,clock,status):
     
 
     # Object holding all level Bodies and scenery
@@ -51,7 +50,7 @@ def play_level(num,keyboard,gameDisplay,clock):
     character = Player(level.player_start)
     crashed = 0
     level.reset()
-    character.current_status = Status(lives = 1, fruit = 0, boxes = 0) # arbitrary start for now
+    character.current_status = status 
     
     game_over = False
     while not game_over: # play the game
