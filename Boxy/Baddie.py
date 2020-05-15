@@ -115,6 +115,7 @@ class Flier(Baddie,Looper):
             Baddie.__init__(self,[0,0],[0,0],floating=True) # [0,0] location and size inputs for now
             
             # this needs to be modified to allow slowing down etc
+            path_pts.append(path_pts[0]) # add first point at end to complete the loop
             path = []
             for k in range(len(path_pts)-1):
                 num_pts = abs(int(np.linalg.norm(np.subtract(path_pts[k],path_pts[k+1]))/speed))
@@ -124,9 +125,7 @@ class Flier(Baddie,Looper):
                 for i,j in zip(*dummy): #unpack dummy and put points into path
                     path.append([i,j])
             
-            # reverse path and add it to complete the loop
-            path = path + path[::-1]
-            
+          
             Looper.__init__(self,size,path,corporeal=True,solid=True)
             
         
@@ -187,3 +186,12 @@ class Owl(Flier):
 
 
 ########################################################################################
+
+
+      
+#### Builder function ########################################################################
+
+baddie_dict = {'owl':Owl}
+
+def create_baddie(baddie_type,path_pts):
+    return box_dict[baddie_type](path_pts)

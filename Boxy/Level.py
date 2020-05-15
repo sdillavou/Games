@@ -52,8 +52,7 @@ class Level:
 
         if num == 0:
             pass
-          
-            
+                
         elif num == 1:
 
             self.player_start = np.array([200*S,floor-300*S],dtype=float)
@@ -100,7 +99,9 @@ class Level:
           #      self.master_gettable_list.append(Fruit(a.pos + [600*S+box_size*2*k,-3*2*box_size]))
 
            
-        
+        else:
+            self.build_level_from_file('level'+str(num)+'.txt')
+            
     # Reset the level by copying master lists and clearing the foreground, then letting objects settle   
     def reset(self):
         # set all appropriate lists
@@ -276,9 +277,22 @@ class Level:
         pos = np.array(position,dtype='float')*(box_size*2.0) + [0,floor-box_size]
         self.master_gettable_list.append(Gettables.create_get(get_type,pos))
         
-    # Add platform to the level, position is scaled by box_size*2. Height is floor.
+    # Add baddie to the level, position is scaled by box_size*2, y axis 0 starts at floor
+    def add_baddie(self,baddie_type,path_pts):
+        for p in path_pts:
+            p[1] = -p[1]*(box_size*2.0) + floor
+            p[0] = p[0]*box_size*2 
+        self.master_baddie_list.append(Baddie.create_baddie(baddie_type,path_pts))
+        
+        
+    # Add floor to the level, position is scaled by box_size*2. Height is floor.
     def add_floor(self,start,stop,color=platform_color,line_color = (0,0,0),line_width=2): 
         self.master_platform_list.append(Platform.Platform([(start+stop)*box_size,floor+50*S],[(stop-start+1)*box_size,50*S],color,line_color,line_width))
+        
+        
+    # Add platform to the level, position, y_pos is scaled by box_size*2. Height is fixed.
+    def add_platform(self,start,stop,y_pos,color=platform_color,line_color = (0,0,0),line_width=2): 
+        self.master_platform_list.append(Platform.Platform([(start+stop)*box_size,-y_pos*2.0*box_size+ floor+10*S],[(stop-start+1)*box_size,10*S],color,line_color,line_width))
         
     # Adds two moving platforms that rotate circularly around a specified center point
     def add_rotation_platform(self,position,radius = 2,platform_width=1,T=600,color=(50,50,50)):
@@ -295,4 +309,52 @@ class Level:
         self.background_list.append(Platform.Platform(pos,[height,height]))
 
 
+    def build_level_from_file(self,filename):
         
+       # box_list = {'wood','protection','tnt','nitro','metal_wood','metal','checkpoint','bouncey_wood','life','protection'}
+       # get_list = {'life','protection','fruit'}
+
+        
+        with open(filename, 'r') as f:
+            commands = f.read().splitlines()
+           
+        
+        for l,c in enumerate(commands):
+            if len(c)>3:
+                params = c.split(':')
+
+                try:
+                    # Add box. Can have floating parameter or not.  
+                    # Box:type:X:Y:floating(false unless T is first letter)
+                    if params[0].lower() == 'box': 
+                        floating = len(params)>=5 and len(params[4][0])>0 and params[4][0].upper() == 'T'
+                        self.add_box(params[1],[float(params[2]),float(params[3])],floating)
+
+                    # add gettables
+                    # Get:type:X:Y
+                    elif params[0].lower() == 'get': 
+                        self.add_get(params[1],[float(params[2]),float(params[3])])
+
+                    # add floors
+                    # Floor:X_start:X_end
+                    elif params[0].lower() == 'floor': 
+                        self.add_floor(float(params[1]),float(params[2]))
+
+
+                    # add platform
+                    # Platform:X_start:X_end:Y_pos
+                    elif params[0].lower() == 'platform': 
+                        self.add_platform(float(params[1]),float(params[2]),float(params[3]))
+
+                    # add player start position -- last one will stick
+                    # Player:X:Y
+                    elif params[0].lower() == 'player': 
+                        self.player_start = np.array([float(params[1])*box_size, -float(params[2])*box_size + floor])
+                    else:
+                        raise 'Not Good Formatting Error, Bud.'
+                except: # spit out error but don't ruin the whole dang thing!
+                    print('Error with line '+str(l)+': '+c)
+
+            
+                       
+      
