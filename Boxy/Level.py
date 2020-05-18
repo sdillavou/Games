@@ -35,7 +35,6 @@ class Level:
         self.ticker = -1
         self.sky = sky
         self.scenery = []
-        self.add_scenery('clouds')
         
         self.foreground_list = [] 
         self.master_platform_list = []
@@ -54,6 +53,8 @@ class Level:
             pass
                 
         elif num == 1:
+            self.add_scenery('clouds')
+
 
             self.player_start = np.array([200*S,floor-300*S],dtype=float)
             
@@ -320,7 +321,7 @@ class Level:
            
         
         for l,c in enumerate(commands):
-            if len(c)>3:
+            if len(c)>3 and c[0] != '#': # tiny lines and ones that start with # are ignored.
                 params = c.split(':')
 
                 try:
@@ -350,6 +351,14 @@ class Level:
                     # Player:X:Y
                     elif params[0].lower() == 'player': 
                         self.player_start = np.array([float(params[1])*box_size, -float(params[2])*box_size + floor])
+                    
+                    
+                    # add scenery
+                    # Scenery:theme
+                    elif params[0].lower() == 'scenery': 
+                        self.add_scenery(params[1])
+                    
+                    
                     else:
                         raise 'Not Good Formatting Error, Bud.'
                 except: # spit out error but don't ruin the whole dang thing!

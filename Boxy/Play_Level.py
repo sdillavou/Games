@@ -61,10 +61,19 @@ def play_level(num,keyboard,gameDisplay,clock,status):
 
         keyboard.handle_keys(pygame.event.get())
 
-        if keyboard.paused: # toggle pause
-            paused = not paused
-            keyboard.paused = False
+        if keyboard.paused or keyboard.quit: # toggle pause
             if paused:
+                if keyboard.quit:
+                    keyboard.quit = False
+                    break #quit!
+                    
+            paused = not paused
+            
+            keyboard.paused = False
+            keyboard.quit = False
+            
+            if paused:
+                
                 pause_menu.draw(gameDisplay)
                 gameDisplay.blit(text, textRect) 
             
@@ -153,4 +162,3 @@ def play_level(num,keyboard,gameDisplay,clock,status):
 
     ##############################################################################
 
-    pygame.quit()

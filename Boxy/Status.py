@@ -58,9 +58,9 @@ class Status():
             textRect.center = (icon_spacing*k + display_height*2 + textRect[2]/2,display_height+icon_size*0.15) 
             gameDisplay.blit(text, textRect) 
 
-        text2 = font2.render('Z: Attack    X: Jump    C: Crouch/Slide/Flop', True, gray, None)
+        text2 = font2.render('Z: Attack    X: Jump    C: Crouch/Slide/Flop    P/Q: Pause', True, gray, None)
         textRect2 = text2.get_rect()  
-        textRect2.center = (display_size[0]- textRect2[2]/2-icon_size,display_height+icon_size*0.1) 
+        textRect2.center = (display_size[0]- textRect2[2]/2-1.0*icon_size,display_height+icon_size*0.1) 
         gameDisplay.blit(text2, textRect2) 
         
     

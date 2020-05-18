@@ -10,6 +10,7 @@ if False:
     import numpy.random.entropy
 
 
+
 pygame.init();
 
 # Custom classes and functions
@@ -25,6 +26,6 @@ clock = pygame.time.Clock()
 # initialize keyboard object to take in control data and feed it to the player object
 keyboard = Game_Keyboard()
 
-play_level(1,keyboard,gameDisplay,clock,Status(lives = 15, fruit = 0, boxes = 0)) # arbitrary status start for now
+play_level(2,keyboard,gameDisplay,clock,Status(lives = 99, fruit = 0, boxes = 0)) # arbitrary status start for now
 
 pygame.quit()

@@ -1,10 +1,21 @@
 
 
+# Add scenery. only current theme is clouds
+# format is Scenery:theme
+Scenery:clouds
+
+
+# Add player starting point
+# format is Player:X:Y
 
 Player:10:7
 
-Box:metal:17:0
 
+
+# Add boxes. types are metal, protection, tnt, nitro, metal_wood, checkpoint, bouncey_wood, life
+# format is Box:type:X:Y
+
+Box:metal:17:0
 Box:protection:0:0
 Box:tnt:0:3:True
 Box:tnt:1:0
@@ -20,20 +31,29 @@ Box:wood:15:1:True
 Box:bouncey_wood:16:2:True
 Box:bouncey_wood:16:3
 
-
 Box:life:13:3:True
+
+
+
+# Add 'gettables'. types are protection, fruit, life
+# format is Get:type:X:Y
 
 Get:life:14:3
 Get:protection:15:3
 Get:fruit:14:4
 
-Floor:-1:4
+
+
+# Add floors
+# format is Floor:start_X:stop_X
+
+Floor:-1:5
 Floor:7:20
 
 
+# Anything with a different format than those above will be ignored.
+
 self.add_rotation_platform([8:0:radius=2:platform_width=1:T=600:color=(50:50:50))
-
-
 
 self.master_baddie_list.append(Baddie.Owl([[box_size*2:box_size*4:[box_size*10:box_size*4])
 self.master_baddie_list.append(Baddie.Owl([[box_size*20:box_size*4:[box_size*12:box_size*4])
