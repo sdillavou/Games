@@ -86,14 +86,18 @@ class Level:
             
             self.add_floor(-1,4)
             self.add_floor(12,20)
-                
-  
-            self.add_rotation_platform([8,0],radius=2,platform_width=1,T=600,color=(50,50,50))
-
-         
             
-            self.master_baddie_list.append(Baddie.Owl([[box_size*2,box_size*4],[box_size*10,box_size*4]]))
-            self.master_baddie_list.append(Baddie.Owl([[box_size*20,box_size*4],[box_size*12,box_size*4]]))
+            self.add_platform(10,12,3)
+            self.add_platform(-3,-3,0)
+            
+            self.add_box('wood',[-3,0])
+  
+            self.add_rotating_platform([8,0],radius=2,platform_width=1,T=600,color=(50,50,50))
+
+            self.add_baddie('owl',[[2,4],[10,4]])
+   
+         #   self.master_baddie_list.append(Baddie.Owl([[box_size*2,box_size*4],[box_size*10,box_size*4]]))
+         #   self.master_baddie_list.append(Baddie.Owl([[box_size*20,box_size*4],[box_size*12,box_size*4]]))
 
             
           #  for k in range(1,10):
@@ -296,7 +300,7 @@ class Level:
         self.master_platform_list.append(Platform.Platform([(start+stop)*box_size,-y_pos*2.0*box_size+ floor+10*S],[(stop-start+1)*box_size,10*S],color,line_color,line_width))
         
     # Adds two moving platforms that rotate circularly around a specified center point
-    def add_rotation_platform(self,position,radius = 2,platform_width=1,T=600,color=(50,50,50)):
+    def add_rotating_platform(self,position,radius = 2,platform_width=1,T=600,color=(50,50,50)):
    
         height = 10*S
         R = radius*box_size*2
@@ -329,34 +333,48 @@ class Level:
                     # Box:type:X:Y:floating(false unless T is first letter)
                     if params[0].lower() == 'box': 
                         floating = len(params)>=5 and len(params[4][0])>0 and params[4][0].upper() == 'T'
-                        self.add_box(params[1],[float(params[2]),float(params[3])],floating)
+                        self.add_box(params[1].lower(),[float(params[2]),float(params[3])],floating)
 
                     # add gettables
                     # Get:type:X:Y
                     elif params[0].lower() == 'get': 
-                        self.add_get(params[1],[float(params[2]),float(params[3])])
+                        self.add_get(params[1].lower(),[float(params[2]),float(params[3])])
+
+                    # Add baddie.  minimum of X1 and Y1, but can have as many pts as needed.
+                    # Baddie:type:X1:Y1:X2:Y2:X3:Y3: (etc)
+                    elif params[0].lower() == 'baddie': 
+                        inputs = [[float(params[k]),float(params[k+1])] for k in range(2,len(params),2)]
+                        self.add_baddie(params[1],inputs)
+   
 
                     # add floors
                     # Floor:X_start:X_end
                     elif params[0].lower() == 'floor': 
-                        self.add_floor(float(params[1]),float(params[2]))
+                        self.add_floor(*[float(i) for i in params[1:]])
 
 
                     # add platform
                     # Platform:X_start:X_end:Y_pos
                     elif params[0].lower() == 'platform': 
-                        self.add_platform(float(params[1]),float(params[2]),float(params[3]))
+                        self.add_platform(*[float(i) for i in params[1:]])
 
                     # add player start position -- last one will stick
                     # Player:X:Y
                     elif params[0].lower() == 'player': 
                         self.player_start = np.array([float(params[1])*box_size, -float(params[2])*box_size + floor])
                     
+                    # add rotating platform
+                    # Rotating_Platform:X_pos:Y_pos:radius(optional):platform_width(optional):rotation_period(optional)
+                    elif params[0].lower() == 'rotating_platform':
+                        print([float(i) for i in params[1:3]],*[float(i) for i in params[3:]])
+                        self.add_rotating_platform([float(i) for i in params[1:3]],*[float(i) for i in params[3:5]],*[int(i) for i in params[5:6]])
+
                     
+
                     # add scenery
                     # Scenery:theme
                     elif params[0].lower() == 'scenery': 
-                        self.add_scenery(params[1])
+                        self.add_scenery(params[1].lower())
                     
                     
                     else:

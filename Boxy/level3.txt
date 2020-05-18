@@ -4,20 +4,22 @@
 # Add baddie.  minimum of X1 and Y1, but can have as many pts as needed.                    
 # format is Baddie:type:X1:Y1:X2:Y2:X3:Y3: (etc)
 # types are (right now only) owl
-Baddie:owl:2:4:10:4:10:0
+
+Baddie:owl:2:0:10:0
 
 
 # add rotating platform. format is:               
 # Rotating_Platform:X_pos:Y_pos:radius(opt):platform_width(opt):rotation_period(opt)
 # defaults for optional inputs are radius=2, width=1, period=600
 
-Rotating_platform:8:0:2:2:600
+#Rotating_platform:8:0:2:2:600
 
 
 
 # Add platform
 # format is Platform:start_X:stop_X:Y_pos
-Platform:-3:-3:0
+
+#Platform:-3:-3:0
 	
 
 # Add scenery. only current theme is clouds
@@ -28,7 +30,14 @@ Scenery:clouds
 # Add player starting point
 # format is Player:X:Y
 
-Player:10:7
+Player:0:4
+
+Floor:-1:10
+Box:wood:2:0
+Box:wood:3:0
+Box:protection:3:3:True
+Box:nitro:4:3:True
+
 
 
 
@@ -36,24 +45,7 @@ Player:10:7
 # format is Box:type:X:Y
 
 
-Box:wood:-3:0
-Box:metal:17:0
-Box:protection:0:0
-Box:tnt:0:3:True
-Box:tnt:1:0
-Box:nitro:2:0
-Box:nitro:3:0
-Box:protection:1:1
-Box:metal_wood:2:1
-Box:metal:3:1
-Box:nitro:2:4:True
 
-Box:checkpoint:12:1:True
-Box:wood:15:1:True
-Box:bouncey_wood:16:2:True
-Box:bouncey_wood:16:3
-
-Box:life:13:3:True
 
 
 
@@ -69,8 +61,7 @@ Get:fruit:14:4
 # Add floors
 # format is Floor:start_X:stop_X
 
-Floor:-1:5
-Floor:7:20
+
 
 
 # Anything with a different format than those above will not work and a text log will show it was ignored.

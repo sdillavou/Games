@@ -194,4 +194,4 @@ class Owl(Flier):
 baddie_dict = {'owl':Owl}
 
 def create_baddie(baddie_type,path_pts):
-    return box_dict[baddie_type](path_pts)
+    return baddie_dict[baddie_type](path_pts)
